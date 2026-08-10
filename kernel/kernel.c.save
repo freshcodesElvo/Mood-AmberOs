@@ -1,0 +1,25 @@
+#include "screen.h"
+
+void kernel_main(void){
+
+	clear_screen();
+
+	print("---------------------------------\n");
+	print("MOOD-AMBER OS\n");
+	print("---------------------------------\n\n");
+
+	print("Kernel Version 0.0.1\n");
+	print("Screen initialization: Success. \n");
+	print("\n");
+	print("Mood-Amber OS is alive\n");
+
+	interrupts_init();
+	print("interrupt syst initialized \n");
+	print("\n");
+	print("")
+
+	while(1){
+		
+	}
+
+}
