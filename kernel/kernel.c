@@ -1,5 +1,6 @@
 #include "screen.h"
 #include "interrupts.h"
+#include "idt.h"
 void kernel_main(void){
 
 	clear_screen();
@@ -10,8 +11,11 @@ void kernel_main(void){
 
 	print("Kernel Version 0.0.1\n");
 	interrupts_init();
+	idt_init();
+	
 
 	print("interrupt syst initialization: Success. \n");
+	print("idt syst initialization: success \n");
 	print("\n");
 	print("Mood-Amber OS is alive\n");
 

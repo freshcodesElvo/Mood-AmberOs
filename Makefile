@@ -21,8 +21,14 @@ build/screen.o: kernel/screen.c
 build/interrupts.o: kernel/interrupts.c
 	$(CC) $(CFLAGS) -c kernel/interrupts.c -o build/interrupts.o
 
-build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/interrupts.o linker.ld
-	$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/interrupts.o -o build/kernel.bin
+build/idt.o: kernel/idt.c
+	$(CC) $(CFLAGS) -c kernel/idt.c -o build/idt.o
+
+build/idt_load.o: kernel/idt_load.asm
+	$(ASM) -f elf32 kernel/idt_load.asm -o build/idt_load.o
+
+build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/interrupts.o build/idt.o build/idt_load.o linker.ld
+	$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/interrupts.o build/idt.o build/idt_load.o -o build/kernel.bin
 
 
 os.iso: build/kernel.bin
