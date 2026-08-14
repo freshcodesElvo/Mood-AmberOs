@@ -27,8 +27,14 @@ build/idt.o: kernel/idt.c
 build/idt_load.o: kernel/idt_load.asm
 	$(ASM) -f elf32 kernel/idt_load.asm -o build/idt_load.o
 
-build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/interrupts.o build/idt.o build/idt_load.o linker.ld
-	$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/interrupts.o build/idt.o build/idt_load.o -o build/kernel.bin
+build/interrupt_handlers.o: kernel/interrupt_handlers.asm
+	$(ASM) -f elf32 kernel/interrupt_handlers.asm -o build/interrupt_handlers.o
+
+build/interrupt_handlers_c.o: kernel/interrupt_handlers.c
+	$(CC) $(CFLAGS) -c kernel/interrupt_handlers.c -o build/interrupt_handlers_c.o
+
+build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o linker.ld
+	$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o -o build/kernel.bin
 
 
 os.iso: build/kernel.bin
