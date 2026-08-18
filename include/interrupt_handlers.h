@@ -1,12 +1,16 @@
 #ifndef INTERRUPT_HANDLERS_H
 #define INTERRUPT_HANDLERS_H
 
-//extern void divide_by_zero_handler(void);
-//extern void double_fault_handler(void);
-//extern void gpf_handler(void);
+#include <stdint.h>
 
-//void divide_by_zero_handler_c(void);
+
+struct interrupt_frame{
+	uint32_t eip;
+	uint32_t cs;
+	uint32_t eflags;
+	
+};
 void divide_by_zero_handler(void);
-void divide_by_zero_handler_c(void);
-#endif
+void divide_by_zero_handler_c(struct interrupt_frame *frame);
 
+#endif
