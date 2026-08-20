@@ -18,16 +18,22 @@ void kernel_main(void)
     idt_init();
     print("IDT system initialization: Success.\n");
 
-	print("testing devide by 0 exception/////////////////////////////////// \n");
+	print("testing gpf/////////////\n");
+
+	__asm__ volatile(
+		"mov $0x20, %ax\n"
+		"mov %ax, %ds\n"
+	);
+/*	print("testing devide by 0 exception/////////////////////////////////// \n");
 	volatile int x = 10;
 	volatile int y = 0;
 	volatile int z = x/y;
 	(void)z;	
-
-    print("\n");
+*/
+  /*  print("\n");
     print("Mood-Amber OS is alive!\n");
 
     while (1)
     {
-    }
+    }*/
 }

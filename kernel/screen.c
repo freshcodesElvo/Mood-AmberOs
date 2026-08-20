@@ -46,3 +46,11 @@ void print(const char *message){
 		message++;
 	}
 }
+void print_hex(uint32_t value){
+	char hex[] = "0123456789ABCDEF";
+	print("0x");
+	for(int i = 7; i>=0; i--){
+		uint8_t digit = (value >> (i*4)) & 0xF;
+		print_char(hex[digit]);
+	}
+}

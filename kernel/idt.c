@@ -34,6 +34,7 @@ void idt_init(void)
     }
 
     idt_set_gate(0, (uint32_t)divide_by_zero_handler, 0x10, 0x8E);
+	idt_set_gate(13, (uint32_t)gpf_handler, 0x10, 0x8E);
     	
 
     idt_load((uint32_t)&idtp);
