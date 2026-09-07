@@ -12,7 +12,7 @@ struct interrupt_frame
 
 void divide_by_zero_handler(void);
 void gpf_handler(void);
-
+void page_fault_handler(void);
 void kernel_exception(
     const char *name,
     uint32_t vector,

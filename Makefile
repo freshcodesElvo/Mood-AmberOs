@@ -18,6 +18,9 @@ build/kernel.o: kernel/kernel.c
 build/screen.o: kernel/screen.c
 	$(CC) $(CFLAGS) -c kernel/screen.c -o build/screen.o
 
+build/paging.o: kernel/paging.c
+	$(CC) $(CFLAGS) -c kernel/paging.c -o build/paging.o
+
 build/interrupts.o: kernel/interrupts.c
 	$(CC) $(CFLAGS) -c kernel/interrupts.c -o build/interrupts.o
 
@@ -33,8 +36,9 @@ build/interrupt_handlers.o: kernel/interrupt_handlers.asm
 build/interrupt_handlers_c.o: kernel/interrupt_handlers.c
 	$(CC) $(CFLAGS) -c kernel/interrupt_handlers.c -o build/interrupt_handlers_c.o
 
-build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o linker.ld
-	$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o -o build/kernel.bin
+
+build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/paging.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o linker.ld
+	$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/paging.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o -o build/kernel.bin
 
 
 os.iso: build/kernel.bin

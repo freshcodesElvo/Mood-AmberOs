@@ -1,5 +1,6 @@
 global divide_by_zero_handler
 global gpf_handler
+global page_fault_handler
 
 extern kernel_exception
 
@@ -71,6 +72,33 @@ gpf_hang:
     hlt
     jmp gpf_hang
 
+page_fault_handler:
+	cli
+
+	; CPU pushed:
+	; [ESP]		=error code
+	; [ESP + 4] = EIP
+	; [ESP + 8] = CS
+	; [ESP + 12] = EFLAGS
+
+	mov eax, [esp]
+	add esp, 4
+
+	; ESP -> EIP
+	mov edx, esp
+	
+	; kernel_exception(name, vector, frame, error_code)
+	push eax
+	push edx
+	push dword 14
+	push page_fault_name
+
+	call kernel_exception
+
+	add esp, 16
+page_fault_hang:
+	hlt
+	jmp page_fault_hang
 
 section .rodata
 
@@ -79,3 +107,5 @@ divide_by_zero_name:
 
 gpf_name:
     db "General Protection Fault", 0
+page_fault_name:
+	db "Page Fault", 0

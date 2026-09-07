@@ -17,6 +17,19 @@ void kernel_exception(
     print(name);
     print("\n");
 
+	if(vector == 14){
+		uint32_t fault_address;
+		__asm__ volatile(
+			"mov %%cr2, %0"
+			: "=r"(fault_address)
+		);
+		print("Fault Addr: ");
+		print_hex(fault_address);
+		print("\n");
+
+	}
+
+
     print("Vector    : ");
     print_hex(vector);
     print("\n");
