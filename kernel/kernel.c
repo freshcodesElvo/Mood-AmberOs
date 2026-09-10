@@ -1,8 +1,9 @@
-	#include  <stdint.h>
+#include  <stdint.h>
 #include "screen.h"
 #include "interrupts.h"
 #include "idt.h"
 #include "paging.h"
+#include "multiboot.h"
 void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 {
     clear_screen();
@@ -14,10 +15,69 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 	print("Multiboot magic >>>> ");
 	print_hex(multiboot_magic);
 	print("\n");
+
+	
+	print("First word at MBI address : ");
+	print_hex(*(uint32_t *)multiboot_info_addr);
+	print("\n");
+
+	print("Second word at MBI addr: ");
+	print_hex(*(uint32_t *)(multiboot_info_addr + 4));
+	print("\n");
     print("multiboot information address: ");
     print_hex(multiboot_info_addr);
     print("\n");
+	
+	print("Memory lower: ");
+	print_hex(*(uint32_t *)(multiboot_info_addr +4));
+	print("\n");
 
+	print("Memory upper:");
+	print_hex(*(uint32_t *)(multiboot_info_addr + 8));
+	print("\n");
+
+	print("Memory map length: ");
+	print_hex(*(uint32_t *)(multiboot_info_addr + 44));
+	print("\n");
+
+	print("Memory map address: ");
+	print_hex(*(uint32_t *)(multiboot_info_addr +48));
+	print("\n");
+
+	struct multiboot_mmap_entry *entry = 
+		(struct multiboot_mmap_entry *)
+		(*(uint32_t *)(multiboot_info_addr + 48));
+
+	uint32_t mmap_end = 
+		(*(uint32_t *)(multiboot_info_addr + 48))+
+		(*(uint32_t *)multiboot_info_addr + 44);
+
+	print("\nMemory Map:\n");
+
+	while((uint32_t)entry< mmap_end){
+
+		if(entry->size < 20){
+			break;
+		}
+		print("Size: ");
+		print_hex(entry->size);
+		
+		print("	Start");
+		print_hex((uint32_t)entry->addr);
+
+		print("	Length: ");
+		print_hex((uint32_t)entry->len);
+
+		print("	Type");
+		print_hex(entry->type);
+
+		print("\n");
+
+		entry = (struct multiboot_mmap_entry *)
+			((uint8_t *)entry + entry->size + 4);
+
+		
+	}
     print("Kernel Version 0.0.1\n");
 
     interrupts_init();
