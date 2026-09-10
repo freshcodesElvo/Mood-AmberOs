@@ -1,14 +1,22 @@
+	#include  <stdint.h>
 #include "screen.h"
 #include "interrupts.h"
 #include "idt.h"
 #include "paging.h"
-void kernel_main(void)
+void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 {
     clear_screen();
 
     print("---------------------------------\n");
     print("MOOD-AMBER OS\n");
     print("---------------------------------\n\n");
+	
+	print("Multiboot magic >>>> ");
+	print_hex(multiboot_magic);
+	print("\n");
+    print("multiboot information address: ");
+    print_hex(multiboot_info_addr);
+    print("\n");
 
     print("Kernel Version 0.0.1\n");
 
@@ -27,7 +35,6 @@ void kernel_main(void)
 	volatile uint32_t *ptr = (uint32_t *)0xDEADBEEF;
 	*ptr =123;
 
-	print("You are not supposed to appear bruv!!!😂😂😂\n");
 /*
 	__asm__ volatile(
 		"mov $0x20, %ax\n"

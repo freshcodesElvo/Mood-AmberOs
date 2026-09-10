@@ -1,4 +1,4 @@
-
+		
 section .multiboot
 align 4
 
@@ -19,7 +19,16 @@ extern kernel_main
 
 start:
 	mov esp, stack_top
+	; Save Multiboot values
+
+	mov ecx, eax
+	mov edx, ebx
+
+	push edx
+	push ecx
 	call kernel_main
+
+	add esp, 8
 
 hang:
 	cli
