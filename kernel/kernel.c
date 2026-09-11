@@ -4,6 +4,10 @@
 #include "idt.h"
 #include "paging.h"
 #include "multiboot.h"
+
+extern uint32_t kernel_start;
+extern uint32_t kernel_end;
+
 void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 {
     clear_screen();
@@ -42,6 +46,16 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 
 	print("Memory map address: ");
 	print_hex(*(uint32_t *)(multiboot_info_addr +48));
+	print("\n");
+
+
+	print("\n Kenrnel bounderies: \n");
+	print("Kernel start: ");
+	print_hex((uint32_t)&kernel_start);
+	print("\n");
+
+	print("kernel end: ");
+	print_hex((uint32_t)&kernel_end);
 	print("\n");
 
 	struct multiboot_mmap_entry *entry = 
