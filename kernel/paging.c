@@ -1,17 +1,23 @@
+
 #include "paging.h"
+#include "frame_allocator.h"
 #include <stdint.h>
 
 #define PAGE_SIZE 4096
 #define PAGE_ENTRIES 1024
 
-static uint32_t page_directory[PAGE_ENTRIES]
-    __attribute__((aligned(PAGE_SIZE)));
+static uint32_t *page_directory;
 
-static uint32_t first_page_table[PAGE_ENTRIES]
-    __attribute__((aligned(PAGE_SIZE)));
+static uint32_t *first_page_table;
 
 void paging_init(void)
 {
+	
+	uint32_t page_directory_address = allocate_frame();
+	uint32_t first_page_table_address = allocate_frame();
+	
+	page_directory = (uint32_t *)page_directory_address;
+	first_page_table = (uint32_t *)first_page_table_address;
     /*
      * Clear the page directory.
      */
