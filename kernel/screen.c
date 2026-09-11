@@ -20,12 +20,41 @@ void clear_screen(void){
 
 }
 
+
+static void scroll_screen(void){
+	for(int row = 1; row< SCREEN_HEIGHT; row++){
+		for(int column = 0; column<SCREEN_WIDTH; column++){
+			int source = (row * SCREEN_WIDTH + column)*2;
+			int destination = ((row-1)* SCREEN_WIDTH + column)*2;
+			
+			video_memory[destination] = video_memory[source];
+			video_memory[destination+1] = video_memory[source+1];
+
+		
+		}
+	}
+	//clear last row
+	
+	for(int column = 0; column<SCREEN_WIDTH;column++ ){
+		int position = ((SCREEN_HEIGHT -1)* SCREEN_WIDTH + column)*2;
+		video_memory[position] = ' ';
+		video_memory[position+1]= WHITE_ON_BLACK;
+	}
+	
+	cursor_row = SCREEN_HEIGHT -1;
+	cursor_column = 0;
+
+
+
+
+}
+
 void print_char(char character){
 	if(character == '\n'){
 		cursor_column = 0;
 		cursor_row++;
 		
-		if(cursor_row>=SCREEN_HEIGHT){cursor_row = 0;}
+		if(cursor_row>=SCREEN_HEIGHT){scroll_screen();}
 		return;
 	}
 	
@@ -40,7 +69,7 @@ void print_char(char character){
 		cursor_column = 0;
 		cursor_row++;
 
-		if(cursor_row >= SCREEN_HEIGHT){cursor_row = 0;}
+		if(cursor_row >= SCREEN_HEIGHT){scroll_screen();}
 		
 	}
 }
