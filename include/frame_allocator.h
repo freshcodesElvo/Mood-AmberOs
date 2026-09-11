@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define FRAME_SIZE 4096
-void frame_allocator_init(void);
+void frame_allocator_init(uint32_t multiboot_info_addr);
 
 uint32_t allocate_frame(void);
 void free_frame(uint32_t frame_address);

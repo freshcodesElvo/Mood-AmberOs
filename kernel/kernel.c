@@ -4,6 +4,7 @@
 #include "idt.h"
 #include "paging.h"
 #include "multiboot.h"
+#include "frame_allocator.h"
 
 extern uint32_t kernel_start;
 extern uint32_t kernel_end;
@@ -57,6 +58,64 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 	print("kernel end: ");
 	print_hex((uint32_t)&kernel_end);
 	print("\n");
+	
+	
+
+
+
+	if(multiboot_magic != 0x2BADB002)
+{
+    print("Invalid multiboot magic!!!!");
+
+    while(1)
+    {
+        __asm__ volatile ("hlt");
+    }
+}
+
+
+/* FRAME ALLOCATOR */
+
+print("\nStarting frame allocator...\n");
+
+frame_allocator_init(multiboot_info_addr);
+
+print("Frame allocator initialized!\n");
+
+uint32_t frame1 = allocate_frame();
+uint32_t frame2 = allocate_frame();
+uint32_t frame3 = allocate_frame();
+
+print("Allocated frames:\n");
+
+print("Frame 1 = ");
+print_hex(frame1);
+print("\n");
+
+print("Frame 2 = ");
+print_hex(frame2);
+
+print("Frame 3 = ");
+print_hex(frame3);
+
+print("\nFREE FRAME TEST\n");
+
+print("Before free_frame\n");
+
+free_frame(frame2);
+
+print("After free_frame\n");
+
+uint32_t frame4 = allocate_frame();
+
+print("After allocate_frame\n");
+
+print("Frame 4 = ");
+print_hex(frame4);
+print("\n");
+
+	/* MEMORY MAP */
+	print("\nMemory Map:\n");
 
 	struct multiboot_mmap_entry *entry = 
 		(struct multiboot_mmap_entry *)
@@ -64,7 +123,7 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 
 	uint32_t mmap_end = 
 		(*(uint32_t *)(multiboot_info_addr + 48))+
-		(*(uint32_t *)multiboot_info_addr + 44);
+		(*(uint32_t *)(multiboot_info_addr + 44));
 
 	print("\nMemory Map:\n");
 
@@ -92,6 +151,9 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 
 		
 	}
+
+
+
     print("Kernel Version 0.0.1\n");
 
     interrupts_init();
@@ -106,8 +168,8 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 
 	print("testing gpf/////////////\n");
 
-	volatile uint32_t *ptr = (uint32_t *)0xDEADBEEF;
-	*ptr =123;
+	//volatile uint32_t *ptr = (uint32_t *)0xDEADBEEF;
+	//*ptr =123;
 
 /*
 	__asm__ volatile(

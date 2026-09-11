@@ -24,6 +24,8 @@ void print_char(char character){
 	if(character == '\n'){
 		cursor_column = 0;
 		cursor_row++;
+		
+		if(cursor_row>=SCREEN_HEIGHT){cursor_row = 0;}
 		return;
 	}
 	
@@ -37,6 +39,8 @@ void print_char(char character){
 	if(cursor_column >= SCREEN_WIDTH){
 		cursor_column = 0;
 		cursor_row++;
+
+		if(cursor_row >= SCREEN_HEIGHT){cursor_row = 0;}
 		
 	}
 }
