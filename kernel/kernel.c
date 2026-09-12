@@ -29,9 +29,9 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 	print("Second word at MBI addr: ");
 	print_hex(*(uint32_t *)(multiboot_info_addr + 4));
 	print("\n");
-    print("multiboot information address: ");
-    print_hex(multiboot_info_addr);
-    print("\n");
+        print("multiboot information address: ");
+   	print_hex(multiboot_info_addr);
+	print("\n");
 	
 	print("Memory lower: ");
 	print_hex(*(uint32_t *)(multiboot_info_addr +4));
@@ -74,45 +74,45 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 }
 
 
-/* FRAME ALLOCATOR */
+	/* FRAME ALLOCATOR */
 
-print("\nStarting frame allocator...\n");
+	print("\nStarting frame allocator...\n");
 
-frame_allocator_init(multiboot_info_addr);
+	frame_allocator_init(multiboot_info_addr);
 
-print("Frame allocator initialized!\n");
+	print("Frame allocator initialized!\n");
 
-uint32_t frame1 = allocate_frame();
-uint32_t frame2 = allocate_frame();
-uint32_t frame3 = allocate_frame();
+	uint32_t frame1 = allocate_frame();
+	uint32_t frame2 = allocate_frame();
+	uint32_t frame3 = allocate_frame();
 
-print("Allocated frames:\n");
+	print("Allocated frames:\n");
 
-print("Frame 1 = ");
-print_hex(frame1);
-print("\n");
+	print("Frame 1 = ");
+	print_hex(frame1);
+	print("\n");
 
-print("Frame 2 = ");
-print_hex(frame2);
+	print("Frame 2 = ");
+	print_hex(frame2);
 
-print("Frame 3 = ");
-print_hex(frame3);
+	print("Frame 3 = ");
+	print_hex(frame3);
 
-print("\nFREE FRAME TEST\n");
+	print("\nFREE FRAME TEST\n");
 
-print("Before free_frame\n");
+	print("Before free_frame\n");
 
-free_frame(frame2);
+	free_frame(frame2);
 
-print("After free_frame\n");
+	print("After free_frame\n");
 
-uint32_t frame4 = allocate_frame();
+	uint32_t frame4 = allocate_frame();
 
-print("After allocate_frame\n");
+	print("After allocate_frame\n");
 
-print("Frame 4 = ");
-print_hex(frame4);
-print("\n");
+	print("Frame 4 = ");
+	print_hex(frame4);
+	print("\n");
 
 	/* MEMORY MAP */
 	print("\nMemory Map:\n");
@@ -164,6 +164,16 @@ print("\n");
 
 	paging_init();
 	print("Paging system initialization: success\n");
+	print("__________________________________________________\n");
+	print("Testing custom virtual mapping...\n");
+	volatile uint32_t *test_address = (uint32_t *)0x00400000;
+	*test_address = 0x12345678;
+	print("writing successful!\n");
+
+	uint32_t value = *(volatile uint32_t *)test_frame_address;
+	print("read through physical identity mapping\n");
+	print_hex(value);
+	print("\n");
 
 
 	print("testing gpf/////////////\n");
