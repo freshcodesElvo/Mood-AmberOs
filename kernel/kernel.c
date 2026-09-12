@@ -175,8 +175,56 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 	print_hex(value);
 	print("\n");
 
+	print("\nTesting automatic page table creation....\n");
+	uint32_t new_frame = allocate_frame();
+	
+	print("new physical frame: ");
+	print_hex(new_frame);
+	print("\n");
+	
+	map_page(0x00800000, new_frame);
+	print("mapping created succesfuly\n");
+	
+	volatile uint32_t *new_address = (uint32_t *)0x00800000;;
+	*new_address = 0xCAFEBABE;
 
+	
+	print("testing filly dynamic mapping------\n");
+	
+	uint32_t dynamic_frame = allocate_frame();
+	print("Dynamic frame: ");
+	print_hex(dynamic_frame);
+	print("\n");
+	
+	map_page(0x00800000, dynamic_frame);
+	volatile uint32_t *dynamic_address = (uint32_t *)0x00800000;
+	*dynamic_address = 0xCAFEBABE;
+	print("Dynamic write succesful!\n");
+	
+	uint32_t dynamic_value = *(volatile uint32_t *)dynamic_frame;
+
+	print("Read through identity mapping: ");
+	print_hex(dynamic_value);
+	print("\n");
+	
 	print("testing gpf/////////////\n");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	//volatile uint32_t *ptr = (uint32_t *)0xDEADBEEF;
 	//*ptr =123;

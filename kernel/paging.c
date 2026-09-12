@@ -52,7 +52,7 @@ void paging_init(void)
 
 	//Map virtual address 0x00400000 to our allocated physical frame
 
-	second_page_table[0] = test_frame_address |3;
+	//second_page_table[0] = test_frame_address |3;
 	 /* Clear the page directory.
      */
     for (int i = 0; i < PAGE_ENTRIES; i++)
@@ -77,6 +77,12 @@ void paging_init(void)
      */
     page_directory[0] =  ((uint32_t)first_page_table) | 3;
     page_directory[1] =((uint32_t)second_page_table)|3;
+
+	
+	print("3rd page table created at: \n");
+	//print_hex(third_page_table_address);
+	print("\n");
+	map_page(0x00400000, test_frame_address);
 
     /*
      * Load the page directory into CR3.
@@ -104,4 +110,52 @@ void paging_init(void)
         :
         : "r"(cr0)
     );
+}
+void map_page(uint32_t virtual_address, uint32_t physical_address){
+	uint32_t directory_index = (virtual_address >> 22) & 0x3FF;
+	uint32_t table_index = (virtual_address >> 12) & 0x3FF;
+
+	//check whether a pge table already exists
+	if((page_directory[directory_index] & 1)==0){
+		create_page_table(directory_index);
+	
+	}
+
+	//get the pge table address from the pge directory entry
+	uint32_t page_table_address = page_directory[directory_index]& 0xFFFFF000;
+	uint32_t *page_table = (uint32_t *)page_table_address;
+
+	//map the virtual page to the physical frame
+	//0x3 = present + writable
+	page_table[table_index] = (physical_address & 0xFFFFF000) | 3;
+
+	//tell the cpu to invalidate this virtual addr from the TLB
+
+__asm__ volatile(
+	"invlpg (%0)"
+	:
+	: "r"(virtual_address)
+	: "memory"	
+		);
+}
+uint32_t create_page_table(uint32_t directory_index){
+	uint32_t page_table_address = allocate_frame();
+	if(page_table_address ==0){
+		print("Error: Could not allocate page table!\n");
+		while(1){
+			__asm__ volatile ("hlt");
+		}
+	}
+
+	uint32_t *page_table = (uint32_t *)page_table_address;
+	//clear all 1024 page table entries
+	for(int i = 0; i< PAGE_ENTRIES; i++){
+		page_table[i]=0;
+	}
+	//connect the pge table to the pge directory
+	//0x3 = present + writable
+	
+	page_directory[directory_index] = page_table_address | 3;
+
+	return page_table_address;
 }
