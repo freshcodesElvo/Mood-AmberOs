@@ -9,17 +9,16 @@
 static uint32_t *page_directory;
 
 static uint32_t *first_page_table;
-static uint32_t *second_page_table;
 
 void paging_init(void)
 {
     uint32_t page_directory_address = allocate_frame();
     uint32_t first_page_table_address = allocate_frame();
-    uint32_t second_page_table_address = allocate_frame();
+    
 
     page_directory = (uint32_t *)page_directory_address;
     first_page_table = (uint32_t *)first_page_table_address;
-    second_page_table = (uint32_t *)second_page_table_address;
+    
 
     print("Page directory allocated at: ");
     print_hex(page_directory_address);
@@ -29,15 +28,9 @@ void paging_init(void)
     print_hex(first_page_table_address);
     print("\n");
 
-    print("2nd page table allocated at: ");
-    print_hex(second_page_table_address);
-    print("\n");
+    
 
-    // Clear the second page table
-    for (int i = 0; i < PAGE_ENTRIES; i++)
-    {
-        second_page_table[i] = 0;
-    }
+
 
     // Clear the page directory
     for (int i = 0; i < PAGE_ENTRIES; i++)
@@ -53,7 +46,7 @@ void paging_init(void)
 
     // Connect page tables to the page directory
     page_directory[0] = ((uint32_t)first_page_table) | 3;
-    page_directory[1] = ((uint32_t)second_page_table) | 3;
+   
 
     // Load page directory into CR3
     __asm__ volatile (
