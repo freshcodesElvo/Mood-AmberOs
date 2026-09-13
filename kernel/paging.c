@@ -1,4 +1,3 @@
-
 #include "paging.h"
 #include "frame_allocator.h"
 #include <stdint.h>
@@ -12,90 +11,58 @@ static uint32_t *page_directory;
 static uint32_t *first_page_table;
 static uint32_t *second_page_table;
 
-uint32_t test_frame_address;
-
 void paging_init(void)
 {
-	
-	uint32_t page_directory_address = allocate_frame();
-	uint32_t first_page_table_address = allocate_frame();
-	uint32_t second_page_table_address = allocate_frame();
+    uint32_t page_directory_address = allocate_frame();
+    uint32_t first_page_table_address = allocate_frame();
+    uint32_t second_page_table_address = allocate_frame();
 
-	page_directory = (uint32_t *)page_directory_address;
-	first_page_table = (uint32_t *)first_page_table_address;
-	second_page_table = (uint32_t *)second_page_table_address;
-	
-	
+    page_directory = (uint32_t *)page_directory_address;
+    first_page_table = (uint32_t *)first_page_table_address;
+    second_page_table = (uint32_t *)second_page_table_address;
 
-	print("Page directory allocated at: ");
-	print_hex(page_directory_address);
-	print("\n");
+    print("Page directory allocated at: ");
+    print_hex(page_directory_address);
+    print("\n");
 
-	print("First page table allocated at: ");
-	print_hex(first_page_table_address);
-	print("\n");
+    print("First page table allocated at: ");
+    print_hex(first_page_table_address);
+    print("\n");
 
-	print("2nd page table allocated at: ");
-        print_hex(second_page_table_address);
-        print("\n");
+    print("2nd page table allocated at: ");
+    print_hex(second_page_table_address);
+    print("\n");
 
-	test_frame_address = allocate_frame();
-	print("test page allocated at: >>>>>");
-	print_hex(test_frame_address);
-	print("\n");
-	second_page_table[0]=test_frame_address | 3;
+    // Clear the second page table
+    for (int i = 0; i < PAGE_ENTRIES; i++)
+    {
+        second_page_table[i] = 0;
+    }
 
-	//Clear the second page table
-	for(int i = 0; i< PAGE_ENTRIES; i++){
-		second_page_table[i] = 0;
-	}
-
-	//Map virtual address 0x00400000 to our allocated physical frame
-
-	//second_page_table[0] = test_frame_address |3;
-	 /* Clear the page directory.
-     */
+    // Clear the page directory
     for (int i = 0; i < PAGE_ENTRIES; i++)
     {
         page_directory[i] = 0;
     }
 
-    /*
-     * Identity-map the first 4 MB of memory.
-     *
-     * Virtual address = Physical address
-     */
+    // Identity-map the first 4 MB
     for (int i = 0; i < PAGE_ENTRIES; i++)
     {
         first_page_table[i] = (i * PAGE_SIZE) | 3;
     }
 
-    /*
-     * Page directory entry 0 points to our first page table.
-     *
-     * 0x3 = Present + Writable
-     */
-    page_directory[0] =  ((uint32_t)first_page_table) | 3;
-    page_directory[1] =((uint32_t)second_page_table)|3;
+    // Connect page tables to the page directory
+    page_directory[0] = ((uint32_t)first_page_table) | 3;
+    page_directory[1] = ((uint32_t)second_page_table) | 3;
 
-	
-	print("3rd page table created at: \n");
-	//print_hex(third_page_table_address);
-	print("\n");
-	map_page(0x00400000, test_frame_address);
-
-    /*
-     * Load the page directory into CR3.
-     */
+    // Load page directory into CR3
     __asm__ volatile (
         "mov %0, %%cr3"
         :
         : "r"(page_directory)
     );
 
-    /*
-     * Enable paging by setting bit 31 of CR0.
-     */
+    // Enable paging
     uint32_t cr0;
 
     __asm__ volatile (
@@ -111,6 +78,22 @@ void paging_init(void)
         : "r"(cr0)
     );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void map_page(uint32_t virtual_address, uint32_t physical_address){
 	uint32_t directory_index = (virtual_address >> 22) & 0x3FF;
 	uint32_t table_index = (virtual_address >> 12) & 0x3FF;

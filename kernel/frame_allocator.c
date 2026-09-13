@@ -70,24 +70,13 @@ uint32_t allocate_frame(void){
 
 void free_frame(uint32_t frame_address)
 {
-    print("ENTERED free_frame\n");
 
     uint32_t frame = frame_address / FRAME_SIZE;
 
-    print("Calculated frame = ");
-    print_hex(frame);
-    print("\n");
 
     if (frame < MAX_FRAMES)
     {
-        print("Clearing bitmap...\n");
         clear_frame(frame);
-        print("Bitmap cleared!\n");
+   
     }
-    else
-    {
-        print("INVALID FRAME!\n");
-    }
-
-    print("LEAVING free_frame\n");
 }
