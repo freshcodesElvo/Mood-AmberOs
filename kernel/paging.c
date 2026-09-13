@@ -9,6 +9,7 @@
 static uint32_t *page_directory;
 
 static uint32_t *first_page_table;
+static uint8_t page_table_dynamic[PAGE_ENTRIES];
 
 void paging_init(void)
 {
@@ -132,6 +133,7 @@ uint32_t create_page_table(uint32_t directory_index){
 	//0x3 = present + writable
 	
 	page_directory[directory_index] = page_table_address | 3;
+	page_table_dynamic[directory_index] = 1;
 
 	return page_table_address;
 }
@@ -166,4 +168,17 @@ void unmap_page(uint32_t virtual_address){
 	);
 	//retyrn the physical frame to the frame allocator
 	free_frame(physical_address);
+	int table_empty = 1;
+	for(int i=0; i<PAGE_ENTRIES;i++){
+		if(page_table[i] & 1){
+			table_empty = 0;
+			break;
+		}
+	}
+
+	if(table_empty && page_table_dynamic[directory_index]){
+		page_directory[directory_index] = 0;
+		page_table_dynamic[directory_index] = 0;
+		free_frame(page_table_address);
+	}
 }

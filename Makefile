@@ -35,15 +35,16 @@ build/interrupt_handlers.o: kernel/interrupt_handlers.asm
 
 build/memory_test.o: kernel/memory_test.c
 	$(CC) $(CFLAGS) -c kernel/memory_test.c -o build/memory_test.o
-
+build/frame_allocator_test.o: kernel/frame_allocator_test.c
+	$(CC) $(CFLAGS) -c kernel/frame_allocator_test.c -o build/frame_allocator_test.o
 
 build/interrupt_handlers_c.o: kernel/interrupt_handlers.c
 	$(CC) $(CFLAGS) -c kernel/interrupt_handlers.c -o build/interrupt_handlers_c.o
 build/frame_allocator.o: kernel/frame_allocator.c
 	$(CC) $(CFLAGS) -c kernel/frame_allocator.c -o build/frame_allocator.o
 
-build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/memory_test.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o linker.ld
-		$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/memory_test.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o -o build/kernel.bin
+build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/frame_allocator_test.o build/memory_test.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o linker.ld
+		$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/frame_allocator_test.o build/memory_test.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o -o build/kernel.bin
 
 
 
