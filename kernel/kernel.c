@@ -206,7 +206,32 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 	print("Read through identity mapping: ");
 	print_hex(dynamic_value);
 	print("\n");
+
+
+	print("\nTesting unmap and and frame reclamation...\n");
+	uint32_t reclaim_frame = allocate_frame();
+	print("Allocated frame\n");
+	print_hex(reclaim_frame);
+	print("\n");
+
+	map_page(0x00C00000, reclaim_frame);
+	print("page mapped!\n");
+	volatile uint32_t *reclaim_address = (uint32_t *)0x00C00000;
+	*reclaim_address = 0xDEADBEEF;
+	print("write succesful\n");
 	
+	uint32_t before_unmap = *(volatile uint32_t *)reclaim_frame;
+	print("value before unmap:");
+	print_hex(before_unmap);
+	print("\n");
+	
+	unmap_page(0x00C00000);
+	print("Page unmapped and frame freed!! hurraaayyyy!!!\n");
+	
+	uint32_t recycled_frame = allocate_frame();
+	print("Recycled frame: ");
+	print_hex(recycled_frame);
+	print("\n");
 	print("testing gpf/////////////\n");
 
 

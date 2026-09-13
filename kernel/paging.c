@@ -159,3 +159,35 @@ uint32_t create_page_table(uint32_t directory_index){
 
 	return page_table_address;
 }
+void unmap_page(uint32_t virtual_address){
+	uint32_t directory_index = (virtual_address >> 22) & 0x3FF;
+	uint32_t table_index = (virtual_address >> 12) & 0x3FF;
+	//check whether the page table exists
+	if((page_directory[directory_index]&1)==0){
+		print("Error: The  page table does not exist!\n");
+		return;
+	}
+	//get the page table address
+	uint32_t page_table_address=page_directory[directory_index] & 0xFFFFF000;
+
+	uint32_t *page_table = (uint32_t *)page_table_address;
+
+	//check whether the pge itself is mapped
+	if((page_table[table_index]& 1)==0){
+		print("Error: Page not mapped!!\n");
+		return;
+	}
+	//get the physical frame before unmapping
+	uint32_t physical_address = page_table[table_index] & 0xFFFFF000;
+	//unmap
+	page_table[table_index] = 0;
+	//tell cpu to remove the old translation from its TLB
+	__asm__ volatile(
+		"invlpg (%0)"
+		:
+		: "r"(virtual_address)
+		: "memory"
+	);
+	//retyrn the physical frame to the frame allocator
+	free_frame(physical_address);
+}
