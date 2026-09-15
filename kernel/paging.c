@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include "screen.h"
 
+extern uint32_t kernel_start;
+extern uint32_t kernel_end;
 #define PAGE_SIZE 4096
 #define PAGE_ENTRIES 1024
 
@@ -81,14 +83,15 @@ void paging_init(void)
 
 
 
-
-
-
-
-
-
-
 void map_page(uint32_t virtual_address, uint32_t physical_address){
+	uint32_t kernel_start_address = (uint32_t)&kernel_start;
+	uint32_t kernel_end_address =(uint32_t)&kernel_end;
+	
+
+	if(virtual_address>=kernel_start_address && virtual_address < kernel_end_address){
+		print("Error:>> Cannot map over kernel memory!\n");
+		return;
+	}
 	uint32_t directory_index = (virtual_address >> 22) & 0x3FF;
 	uint32_t table_index = (virtual_address >> 12) & 0x3FF;
 

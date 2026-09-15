@@ -1,6 +1,7 @@
 #include "screen.h"
 #include "frame_allocator.h"
 #include  "paging.h"
+extern uint32_t kernel_start;
 
 void memory_test(void){
 	print("\n              MEMORY MANAGEMENT TEST                  \n");
@@ -27,4 +28,14 @@ void memory_test(void){
 	print("Recycled frame: ");
 	print_hex(recycled);
 	print("\n");
+
+
+	print("\n TESTING KERNEL MEMORY PROTECTION\n");
+	uint32_t protection_frame = allocate_frame();
+	print("Protection test frame: ");
+	print_hex(protection_frame);
+	print("\n");
+
+	map_page((uint32_t)&kernel_start, protection_frame);
+	free_frame(protection_frame);
 }
