@@ -1,9 +1,15 @@
 #ifndef PAGING_H
 #define PAGING_H
-#include <stdint.h>
+
+#include  <stdint.h>
+#define PAGE_PRESENT 0x001
+#define PAGE_WRITABLE 0x002
+#define PAGE_USER 0x004
+
+
 extern uint32_t test_frame_address;
 void paging_init(void);
-void map_page(uint32_t virtual_address, uint32_t physical_address);
+void map_page(uint32_t virtual_address, uint32_t physical_address, uint32_t flags);
 void unmap_page(uint32_t virtual_address);
 uint32_t create_page_table(uint32_t directory_index);
 #endif

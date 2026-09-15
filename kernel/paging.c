@@ -66,7 +66,7 @@ void paging_init(void)
         : "=r"(cr0)
     );
 
-    cr0 |= 0x80000000;
+    cr0 |= 0x80010000;
 
     __asm__ volatile (
         "mov %0, %%cr0"
@@ -83,7 +83,7 @@ void paging_init(void)
 
 
 
-void map_page(uint32_t virtual_address, uint32_t physical_address){
+void map_page(uint32_t virtual_address, uint32_t physical_address, uint32_t flags){
 	uint32_t kernel_start_address = (uint32_t)&kernel_start;
 	uint32_t kernel_end_address =(uint32_t)&kernel_end;
 	
@@ -107,7 +107,7 @@ void map_page(uint32_t virtual_address, uint32_t physical_address){
 
 	//map the virtual page to the physical frame
 	//0x3 = present + writable
-	page_table[table_index] = (physical_address & 0xFFFFF000) | 3;
+	page_table[table_index] = (physical_address & 0xFFFFF000) | flags;
 
 	//tell the cpu to invalidate this virtual addr from the TLB
 
