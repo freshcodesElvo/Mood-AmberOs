@@ -140,6 +140,16 @@ uint32_t create_page_table(uint32_t directory_index){
 
 	return page_table_address;
 }
+static int page_table_is_empty(uint32_t *page_table){
+	for(int i = 0; i<PAGE_ENTRIES; i++){
+		if(page_table[i] & 1){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
 void unmap_page(uint32_t virtual_address){
 	uint32_t directory_index = (virtual_address >> 22) & 0x3FF;
 	uint32_t table_index = (virtual_address >> 12) & 0x3FF;
@@ -171,17 +181,14 @@ void unmap_page(uint32_t virtual_address){
 	);
 	//retyrn the physical frame to the frame allocator
 	free_frame(physical_address);
-	int table_empty = 1;
-	for(int i=0; i<PAGE_ENTRIES;i++){
-		if(page_table[i] & 1){
-			table_empty = 0;
-			break;
-		}
-	}
-
-	if(table_empty && page_table_dynamic[directory_index]){
+	//Reclaim dynamically created page tables when empty
+	if(page_table_dynamic[directory_index] && page_table_is_empty(page_table)){
 		page_directory[directory_index] = 0;
 		page_table_dynamic[directory_index] = 0;
+		//return the empty pge table frame to the allocator
 		free_frame(page_table_address);
+		print("Empty page table reclaimed!!\n");
 	}
+
+	
 }
