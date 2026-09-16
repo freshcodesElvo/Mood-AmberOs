@@ -83,14 +83,14 @@ void paging_init(void)
 
 
 
-void map_page(uint32_t virtual_address, uint32_t physical_address, uint32_t flags){
+int map_page(uint32_t virtual_address, uint32_t physical_address, uint32_t flags){
 	uint32_t kernel_start_address = (uint32_t)&kernel_start;
 	uint32_t kernel_end_address =(uint32_t)&kernel_end;
 	
 
 	if(virtual_address>=kernel_start_address && virtual_address < kernel_end_address){
 		print("Error:>> Cannot map over kernel memory!\n");
-		return;
+		return 0;
 	}
 	uint32_t directory_index = (virtual_address >> 22) & 0x3FF;
 	uint32_t table_index = (virtual_address >> 12) & 0x3FF;
@@ -104,9 +104,31 @@ void map_page(uint32_t virtual_address, uint32_t physical_address, uint32_t flag
 	//get the pge table address from the pge directory entry
 	uint32_t page_table_address = page_directory[directory_index]& 0xFFFFF000;
 	uint32_t *page_table = (uint32_t *)page_table_address;
-
+	//prevent accidental remapping
+	if(page_table[table_index] & PAGE_PRESENT){
+		print("Error: virtual page already mapped\n");
+		return 0;
+	}
 	//map the virtual page to the physical frame
-	//0x3 = present + writable
+	//page_table[table_index] = (physical_address & 0xFFFFF000) | flags;
+	//prevents accidental mapping
+	/*if(page_table[table_index] & PAGE_PRESENT){
+		print("Error: virtual page already mapped! \n");
+		return;
+	}
+
+	//prevent overwritting an existing mappng
+	if(page_table[table_index] & PAGE_PRESENT){
+		print("Error: >> Virtual page is already mapped\n");
+		return;
+	}
+	//prevent duplicate virtual page mappings
+	if(page_table[table_index] & PAGE_PRESENT){
+		print("Error: virtual page is already mapped!");
+		return;
+	
+	}*/
+	//map the virtual pge to the physical frame
 	page_table[table_index] = (physical_address & 0xFFFFF000) | flags;
 
 	//tell the cpu to invalidate this virtual addr from the TLB
@@ -117,6 +139,7 @@ __asm__ volatile(
 	: "r"(virtual_address)
 	: "memory"	
 		);
+return 1;
 }
 uint32_t create_page_table(uint32_t directory_index){
 	uint32_t page_table_address = allocate_frame();

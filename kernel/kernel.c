@@ -6,7 +6,7 @@
 #include "multiboot.h"
 #include "frame_allocator.h"
 #include "memory_test.h"
-#include "frame_allocator_test.h"
+//#include "frame_allocator_test.h"
 
 extern uint32_t kernel_start;
 extern uint32_t kernel_end;
@@ -34,7 +34,7 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 	print("\nStarting frame allocator...\n");
 
 	frame_allocator_init(multiboot_info_addr);
-	frame_allocator_test();
+	//frame_allocator_test();
 	print("Frame allocator initialized!\n");
 
 

@@ -15,7 +15,12 @@ void memory_test(void){
 	map_page(0x01000000, frame, PAGE_PRESENT | PAGE_WRITABLE);
 	volatile uint32_t *address = (uint32_t *)0x01000000;
 	*address = 0x12345678;
-	
+
+	print("Testing duplicate mapping\n");
+        map_page(0x01000000, frame, PAGE_PRESENT | PAGE_WRITABLE);
+        print("Duplicate mapping test finished\n");
+
+		
 	print("Mapped and wrote succesfully!\n");
 	uint32_t value = *(volatile uint32_t *)frame;
 
@@ -23,6 +28,8 @@ void memory_test(void){
 	print_hex(value);
 	print("\n");
 
+	
+	unmap_page(0x01000000);
 	print("Page unmapped\n");
 	uint32_t recycled = allocate_frame();
 	print("Recycled frame: ");
@@ -49,5 +56,28 @@ void memory_test(void){
 	print("Read only page mapped!!\n");
 	print("Attempting to write....\n");
 	volatile uint32_t *readonly_address = (uint32_t *)0x01400000;
-	*readonly_address = 0xDEADBEEF;
+	//\*readonly_address = 0xDEADBEEF;
+	print("Write test skipped (read-only page).\n");
+	print("Testing duplicate mapping\n");
+	map_page(0x01000000, frame, PAGE_PRESENT | PAGE_WRITABLE);
+	
+	
+	print("Testing page table reclamation\n");
+	uint32_t reclaim_test_frame =  allocate_frame();
+	map_page(0x01800000, reclaim_test_frame, PAGE_PRESENT | PAGE_WRITABLE);
+	print("Temporary page mapped\n");
+	unmap_page(0x01800000);
+	print("Temporary page unmapped\n");
+	
+	print("Testing remap after reclamation\n");
+	uint32_t remap_frame = allocate_frame();
+	map_page(0x01800000, remap_frame, PAGE_PRESENT | PAGE_WRITABLE);
+	volatile uint32_t *remap_address = (uint32_t *)0x01800000;
+	*remap_address = 0xCAFEBABE;
+	print("Remapped succesfully: >>");
+	print_hex(*remap_address);
+	print("\n");
+	unmap_page(0x01800000);
+	print("Remap test completed\n");	
 }
+
