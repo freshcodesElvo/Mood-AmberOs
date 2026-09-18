@@ -7,7 +7,6 @@
 #define PAGE_USER 0x004
 
 
-extern uint32_t test_frame_address;
 void paging_init(void);
 int map_page(uint32_t virtual_address, uint32_t physical_address, uint32_t flags);
 void unmap_page(uint32_t virtual_address);

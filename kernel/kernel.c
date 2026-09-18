@@ -6,6 +6,7 @@
 #include "multiboot.h"
 #include "frame_allocator.h"
 #include "memory_test.h"
+#include "heap.h"
 //#include "frame_allocator_test.h"
 
 extern uint32_t kernel_start;
@@ -46,10 +47,27 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
     idt_init();
 
 	paging_init();
+	
+	print("********TESTING KERNEL HEAP***********\n");
+	uint32_t *heap_test = (uint32_t *)kmalloc(sizeof(uint32_t));
+	if(heap_test ==0){
+		print("Heap allocation failed: \n");
+	}else{
+		*heap_test = 0xCAFEBABE;
+		print("Heap allocation successful!\n");
+		print("Heap value: ");
+		print_hex(*heap_test);
+		print("\n");
+	}
+	print("**********KERNEL HEAP TEST DONE!***************");
 
 	print("\n\n******** RUNNING NEW MEMORY TEST ********\n");
-	memory_test();
-	print("******** NEW MEMORY TEST FINISHED ********\n");	
+	print("TESTING HEAP DEALLOCATION...\n");
+	kfree(heap_test);
+	print("Heap memory freed succesfully\n");
+	print("KERNEL HEAP TES DONE\n");
+       //memory_test();
+	//print("******** NEW MEMORY TEST FINISHED ********\n");	
 
 	
     while (1)
