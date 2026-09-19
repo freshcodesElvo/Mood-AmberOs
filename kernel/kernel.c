@@ -88,6 +88,31 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 		print("\n");
 		
 		kfree(reused_heap);
+
+		print("???????????????????????????????????????????????\n");
+		print("Testing multi page allocations\n");
+		uint32_t *multi_page_heap = (uint32_t *)kmalloc(8192);
+		if(multi_page_heap==0){
+			print("multipage allocation failed terriblyyyyyyyy  buuuuuH!! haahahahhhah!!!\n");
+			
+		}else{
+			print("Multi page allocation siuccessful!1 yeeeyy!!\n");
+			//write to the first pge
+			multi_page_heap[0] = 0x11111111;
+			//write to the 2nd pge
+			multi_page_heap[1024] = 0x22222222;
+			
+			print("First page value: ");
+			print_hex(multi_page_heap[0]);
+			print("\n");
+			
+			print("Second page value: ");
+			print_hex(multi_page_heap[1024]);
+			print("\n");
+			
+			kfree(multi_page_heap);
+			print("Multi page memory freed succesful!\n");
+		}
 	}
 	
     while (1)
