@@ -68,7 +68,27 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 	print("KERNEL HEAP TES DONE\n");
        //memory_test();
 	//print("******** NEW MEMORY TEST FINISHED ********\n");	
-
+	print("??????????????????????????????????????????????\n");
+	print("Testing heap re use\n");
+	uint32_t *reused_heap  = (uint32_t *)kmalloc(sizeof(uint32_t));
+	if(reused_heap ==0){
+		print("Heap re use failed\n");
+	}else{
+		print("Heap re use succesful\n");
+		print("Original address: ");
+		print_hex((uint32_t)heap_test);
+		print("\n");
+		
+		print("Reused address: ");
+		print_hex((uint32_t)reused_heap);
+		print("\n");
+		
+		*reused_heap = 0x12345678;
+		print_hex(*reused_heap);
+		print("\n");
+		
+		kfree(reused_heap);
+	}
 	
     while (1)
     {
