@@ -19,6 +19,10 @@ void *kmalloc(uint32_t size){
 		return 0;
 	}
 	uint32_t pages = (size + PAGE_SIZE - 1)/ PAGE_SIZE;
+
+	if(size > 0x0FFFFFFFFu-(PAGE_SIZE-1)){
+		return 0;
+	}
 	//search for previously freed block of the same size
 	for(int i = 0; i<MAX_ALLOCATIONS; i++){
 		if(!allocations[i].active && allocations[i].start_address !=0 && allocations[i].pages == pages){
