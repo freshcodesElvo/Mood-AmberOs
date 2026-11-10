@@ -14,6 +14,36 @@
 extern uint32_t kernel_start;
 extern uint32_t kernel_end;
 
+int string_compare(const char *str1, const char *str2){
+	while(*str1 && *str2){
+		if(*str1 != *str2){
+			return 1;
+		}
+		str1++;
+		str2++;
+	}
+	return(*str1 == '\0' && *str2 == '\0')? 0 : 1;
+}
+void execute_command(const char *command){
+	if(string_compare(command, "help")==0){
+		print("Available commands:\n");
+		print("Help - Show available commands\n");
+		print("About - About Mood-Amber OS\n");
+		print("Clear - Clear the screen\n");
+		
+	}else if(string_compare(command, "about")==0){
+		print("Mood=Amber OS\n");
+		print("A hobby operating system developed from scratch.... Bruhh!!!\n");
+	}else if(string_compare(command, "clear")==0){
+		clear_screen();	
+	}else if(command[0]=='\0'){
+		//ignore empty commands
+	}else{
+		print("Unknown command: ");
+		print(command);
+		print("\n");
+	}
+}
 void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 {
     clear_screen();
@@ -614,6 +644,9 @@ print("\n");
 	keyboard_irq_enable();
 	asm volatile ("sti");
 	uint32_t input_length;
+
+	#define COMMAND_BUFFER_SIZE 128
+	char command_buffer[COMMAND_BUFFER_SIZE]={0};
     while (1)
     {
 	int character;
@@ -631,15 +664,25 @@ print("\n");
 		if(input_length>0){
 			backspace();
 			input_length--;
+			command_buffer[input_length] = '\0';
 		}
 	}
 	else if(character == '\n'){
+		//mark the end of the command
+		command_buffer[input_length]='\0';
 		print_char('\n');
-		input_length = 0;
+		execute_command(command_buffer);
+		input_length =0;
+		command_buffer[0] =  '\0';
 	}
 	else{
-		print_char((char)character);
-		input_length++;
+		//prevent buffer overflow
+		if(input_length < COMMAND_BUFFER_SIZE-1){
+			command_buffer[input_length] = (char)character;
+			input_length++;
+			print_char((char)character);
+		}
+		
 	}
     }
 }
