@@ -23,5 +23,5 @@ struct idt_ptr{
 
 void idt_init(void);
 void idt_load(uint32_t);
-
+void idt_set_gate(int number, uint32_t handler, uint16_t selector, uint8_t type_attr);
 #endif

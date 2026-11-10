@@ -3,8 +3,8 @@
 
 static struct idt_entry idt[IDT_ENTRIES];
 static struct idt_ptr idtp;
-
-static void idt_set_gate(
+extern void keyboard_irq_handler(void);
+void idt_set_gate(
     int number,
     uint32_t handler,
     uint16_t selector,
@@ -33,9 +33,10 @@ void idt_init(void)
         idt[i].offset_high = 0;
     }
 
-    idt_set_gate(0, (uint32_t)divide_by_zero_handler, 0x10, 0x8E);
-	idt_set_gate(13, (uint32_t)gpf_handler, 0x10, 0x8E);
-	idt_set_gate(14,(uint32_t)page_fault_handler, 0x10, 0x8E);    	
-
+    idt_set_gate(0, (uint32_t)divide_by_zero_handler, 0x08, 0x8E);
+	idt_set_gate(13, (uint32_t)gpf_handler, 0x08, 0x8E);
+	idt_set_gate(14,(uint32_t)page_fault_handler, 0x08, 0x8E);    
+	
+	idt_set_gate(0x21, (uint32_t)keyboard_irq_handler, 0x08, 0x8E);
     idt_load((uint32_t)&idtp);
 }

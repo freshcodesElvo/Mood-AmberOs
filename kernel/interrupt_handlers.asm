@@ -1,7 +1,8 @@
 global divide_by_zero_handler
 global gpf_handler
 global page_fault_handler
-
+global keyboard_irq_handler
+extern keyboard_handler
 extern kernel_exception
 
 section .text
@@ -100,6 +101,14 @@ page_fault_hang:
 	hlt
 	jmp page_fault_hang
 
+;==================
+;keyboard iqr1 - interrupt 33(0x21)
+;=============================
+keyboard_irq_handler:
+	pusha
+	call keyboard_handler
+	popa
+	iretd
 section .rodata
 
 divide_by_zero_name:

@@ -7,6 +7,7 @@
 #include "frame_allocator.h"
 #include "memory_test.h"
 #include "heap.h"
+#define HEAP_TEST_ALLOCATION_COUNT 128
 //#include "frame_allocator_test.h"
 
 extern uint32_t kernel_start;
@@ -229,8 +230,392 @@ void kernel_main(uint32_t multiboot_magic, uint32_t multiboot_info_addr)
 		kfree(overflow_test);
 	}
 	print("==========overflow test finished============");
+
+	print("*************invalid free test**************");
+	uint32_t  *test_block = (uint32_t *)kmalloc(4096);
+	if(test_block ==0){
+		print("error:  allocation failed!\n");
+
+	}else{
+		*test_block = 0x12345678;
+		print("valid allocation created successfully\n");
+
+		//test, free an intirior pointer
+		kfree((void *)((uint32_t)test_block+4));
+
+		if(*test_block==0x12345678){
+			print("success: interior pointer free ignored\n");
+			
+		}else{
+			print("Error: interior pointer free corrupted allocation\n");
+		}
+		//test 1 --> free an address that was never allocated
+		kfree((void *)0x03000000);
+		print("invallid ponter free atempted\n");
+		
+		//confirmation that valid allocation still works
+		if(*test_block == 0x12345678){
+			print("Success: valid allocation is still intact\n");
+		
+		}
+		else{
+			print("error: allocation was corrupted\n");
+		}
+		//test 2--> free the valid allocation
+		kfree(test_block);
+		print("valid allocation freed\n");
+
+		//test 3 -->> attempt to free it the 2nd time
+		kfree(test_block);
+		print("double free attempted\n");
+	
+		uint32_t *reuse_test = (uint32_t *)kmalloc(4096);
+		if(reuse_test == 0){print("Error: reallocation failed\n");}
+		else{
+			*reuse_test = 0xCAFEBABE;
+			if(*reuse_test == 0xCAFEBABE){
+				print("success: memory reused succesfully\n");
+			}
+			else{
+				print("reused memory corrupted\n");
+			}
+			kfree(reuse_test);
+		}		
+	
+	}
+
+	print("invalid free test finished__________\n");
+
+	print("\n++++++++++++++++++++ tracking limit test++++++++++++++++++++++++++++++++\n");
+	void *tracking_blocks[HEAP_TEST_ALLOCATION_COUNT];
+	uint32_t allocated = 0;
+	for(uint32_t i = 0; i<HEAP_TEST_ALLOCATION_COUNT; i++){
+		tracking_blocks[i] = kmalloc(4096);
+		if(tracking_blocks[i] ==0){
+			print("allocation stopped at index: ");
+			print_hex(i);
+			print("\n");
+			break;
+		}
+		allocated++;
+	}
+	
+	print("Succesful allocations: " );
+	print_hex(allocated);
+	print("\n");
+	
+	void *extra_block = kmalloc(4096);
+	if(extra_block == 0){
+		print("success: full tracking table rejected allocation\n");
+		
+	}else{
+		print("error: allocation succeeded beyond tracking limit!!\n");
+		kfree(extra_block);
+	}
+	for(uint32_t i = 0; i< allocated; i++){
+		kfree(tracking_blocks[i]);
+	}
+	print("tracking test allocations freed\n");
+	print("???????????????????tracking limit test finished???????????????????\n");
+
+	print("___________different size re use test____________________\n");
+	void *fragment_a = kmalloc(4096);
+	void *fragment_b = kmalloc(8192);
+	void *fragment_c = kmalloc(4096);
+
+	if(fragment_a ==0 || fragment_b == 0 || fragment_c ==0){
+		print("Error: initial allocation failed\n");
+
+	}else{
+		print("Block A: ");
+		print_hex((uint32_t)fragment_a);
+		print("\n");
+
+		print("Block B: ");
+		print_hex((uint32_t)fragment_b);
+		print("\n");
+		
+		print("Block C: ");
+		print_hex((uint32_t)fragment_c);
+		print("\n");
+
+		kfree(fragment_b);
+		print("Block B freed!! \n");
+		void *fragment_reused = kmalloc(8192);
+		
+		if(fragment_reused == fragment_b){
+			print("Success: two-block pge reused succesfully\n");
+			
+		}else if(fragment_reused ==0){
+			print("error: re allocation failed\n");
+			
+		}else{
+			print("warning: a different address was returned");
+		}
+
+		if(fragment_reused !=0 ){
+			kfree(fragment_reused);
+		}
+		kfree(fragment_a);
+		kfree(fragment_c);
+	}
+	print("+++++++++++++differnt size reuse test finished++++++++++++++++++++++\n");
+
+
+	print("\n diffent size reuse test 2+++++++++++++++++++++\n");
+	void *large_block = kmalloc(8192);
+	if(large_block==0){
+		print("Error: large allocation failed\n");
+
+	}
+	else{
+		print("large block address: ");
+		print_hex((uint32_t)large_block);
+		print("\n");
+		kfree(large_block);
+		print("large block freed\n");
+
+		void *small_block =  kmalloc(4096);
+		if(small_block == 0){
+			print("Error: small allocation failed\n");
+			
+		}else{
+			print("Small block address: ");
+			print_hex((uint32_t)small_block);
+			print("\n");
+
+			if(small_block == large_block){
+
+				print("small allocation reused large block address \n");
+				
+			}
+			else{
+				print("small allocation used a different address!\n");
+			}
+			kfree(small_block);
+
+
+
+		}
+
+	}
+	print("========= differnt size reused test 2 finished==================\n");
+
+	print("\n======heap boundary test=================\n");
+	void *boundary_test = kmalloc(0x01000000);
+	if(boundary_test==0){
+		print("success: allocation beyond heap limit rejected!!\n");
+		
+	}else{
+		print("error: heap boundary was exeeded!!\n");
+		kfree(boundary_test);
+	}
+	print("---------------heap boundary test finished---------------\n");
+
+	print("\n@@@@@@@@@@@fragmentation test@@@@@@@@@@@@@@@@@@@@@\n");
+	void *frag_a = kmalloc(4*4096);
+	void *frag_b = kmalloc(6*4096);
+	void *frag_c = kmalloc(8*4096);
+	void *frag_d = kmalloc(10*4096);
+	void *frag_e =  kmalloc(12*4096);
+	
+	if(!frag_a || ! frag_b || !frag_c || !frag_d || !frag_e){
+		print("Error: fragmentation allocation failed\n");
+	}else{
+		print("5 allocations successfull!\n");
+		kfree(frag_b);
+		kfree(frag_d);
+	
+		print("b and d freed!!!\n");
+		void *reuse_b =  kmalloc(6*4096);
+		void *reuse_d = kmalloc(10*4096);
+
+		if(reuse_b  == frag_b){
+			print("success: block reused!\n");
+		}else{
+			print("ERROR: block b reuse failed\n");
+		}
+		if(reuse_d == frag_d){
+			print("success: block d reused!!\n");
+		}else{
+			print("error: block d reuse failed\n");
+		}
+		kfree(reuse_b);
+		kfree(reuse_d);
+
+		kfree(frag_a);
+		kfree(frag_c);
+		kfree(frag_e);
+
+		print("All fragmentation test allocations freed\n");
+	}
+
+	print("+++++++++++fragmentation test finished++++++++++++++\n");
+
+	print("\n++++++++ memory coaelescing test++++++++++++++++++++++++\n");
+
+	void *coal_a = kmalloc(4*4096);
+	void *coal_b = kmalloc(6*4096);
+	void *coal_c = kmalloc(8*4096);
+
+	if(coal_a == 0 || coal_b == 0|| coal_c ==0){
+		print("Error: initial allocation failed\n");
+		if(coal_a != 0) kfree(coal_a);
+		if(coal_b != 0) kfree(coal_b);
+		if(coal_c != 0) kfree(coal_c);
+		
+	}else{
+		print("bloc A: ");
+		print_hex((uint32_t)coal_a);
+		print("\n");
+	
+		print("block B: ");
+		print_hex((uint32_t)coal_b);
+		print("\n");
+
+		print("block c: ");
+		print_hex((uint32_t)coal_c);
+		print("\n");
+
+		if((uint32_t)coal_c != (uint32_t)coal_b + (6*4096)){
+			print("blocks b and c are not adjacent!!\n");
+		}else{
+			print("block b and c are adjacent!!\n");
+			
+			kfree(coal_b);
+			kfree(coal_c);
+		
+			print("bocks b and c freed\n");
+
+			void *large_block = kmalloc(14*4096);
+			
+			if(large_block ==coal_b){ 
+				print("success: adascent blocks reused\n");
+				
+			}else if(large_block ==0){
+				print("large allocation failed\n");
+
+			}else{
+				print("no coalescing: new address returned!!\n");
+			
+				print("returned address: ");
+				print_hex((uint32_t)large_block);
+				print("\n");
+
+				
+			}
+			if(large_block !=0){
+				kfree(large_block);
+			}
+		}
+		kfree(coal_a);
+	}
+	print("***************memory coalescing test done!!!*************************\n");
+
+	print("\n-------------------three block coalescing test------------------------\n");
+	void *three_a = kmalloc(4*4096);
+	void *three_b = kmalloc(6*4096);
+	void *three_c = kmalloc(8*4096);
+	
+
+
+
+	
+print("Block A: ");
+print_hex((uint32_t)three_a);
+print("\n");
+
+print("Block B: ");
+print_hex((uint32_t)three_b);
+print("\n");
+
+print("Block C: ");
+print_hex((uint32_t)three_c);
+print("\n");
+
+
+
+
+
+
+
+
+
+
+
+	
+	if(!three_a || !three_b || !three_c ){
+		print("Error: initial allocations failed! \n");
+		if(three_a)kfree(three_a);
+		if(three_b)kfree(three_b);
+		if(three_c)kfree(three_c);
+		
+	}else{
+		print("Three allocations success!!\n");
+		kfree(three_b);
+		print("block_b freed\n");
+		
+		kfree(three_c);
+		print("bolck c freed\n");
+		
+		kfree(three_a);
+		print("block a freed!\n");
+		
+		void *merged_block=kmalloc(18*4096);
+		if(merged_block==three_a){
+			print("SUCCESS!: three blocks mrged!!\n");
+		}else if(merged_block ==0){
+			print("error: meged allocations failed!\n");		
+		}else{
+			print("warning: differnt address returned\n");
+			print_hex((uint32_t)merged_block);
+			print("\n");
+		}
+		if(merged_block){
+			kfree(merged_block);
+			
+		}
+		
+	}
+	print("---------------------three block coalescing test finished--------------------------\n");
+
+	print("----block splitting test---------------");
+	void *large = kmalloc(22*4096);
+	if(large == 0){
+		print("Error: large allocation failed!\n");
+		
+	}else{
+		kfree(large);
+		print("22 page block frred!\n");
+
+		void *first = kmalloc(18*4096);
+		if(first==large){
+		print("success: 18 page allocation reused original address !\n");	
+		}else{
+			print("warning: different address returned\n");
+			
+		}if(first !=0){
+			//requesting the remaining 4 pages
+			void *remainder = kmalloc(4*4096);
+			if((uint32_t)remainder == (uint32_t)large + (18*4096)){
+				print("success: remaining 4 pages reused!\n");
+			}else{
+				print("error: remaining block not reused \n");
+			}
+			if(remainder!=0){
+				kfree(remainder);
+			}
+			kfree(first);
+		}
+	}
+	print("--------------- block splitting test done -----------------\n");
+
+	keyboard_irq_enable();
+	asm volatile ("sti");
+
     while (1)
     {
+	asm volatile("hlt");
     }
 }
 

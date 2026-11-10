@@ -44,9 +44,11 @@ build/frame_allocator.o: kernel/frame_allocator.c
 build/heap.o: kernel/heap.c
 	$(CC) $(CFLAGS) -c kernel/heap.c -o build/heap.o
 
+build/keyboard.o: kernel/keyboard.c
+	$(CC) $(CFLAGS) -c kernel/keyboard.c -o build/keyboard.o
 
-build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/memory_test.o build/heap.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o linker.ld
-	$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/memory_test.o build/heap.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o -o build/kernel.bin
+build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/memory_test.o build/heap.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o build/keyboard.o linker.ld
+	$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/memory_test.o build/heap.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o build/keyboard.o -o build/kernel.bin
 
 
 
