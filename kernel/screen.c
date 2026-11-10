@@ -73,6 +73,21 @@ void print_char(char character){
 		
 	}
 }
+void backspace(void){
+	//move cursor 1 postion backwards
+	if(cursor_column > 0){
+		cursor_column--;
+	}else if(cursor_row>0){
+		cursor_row--;
+		cursor_column = SCREEN_WIDTH-1;
+		
+	}else{return;}
+	//calculate the vga memory postion
+	int position = (cursor_row * SCREEN_WIDTH + cursor_column)*2;
+	//erase the char
+	video_memory[position] = ' ';
+	video_memory[position+1]=WHITE_ON_BLACK;
+}
 void print(const char *message){
 	while(*message !='\0'){
 		print_char(*message);

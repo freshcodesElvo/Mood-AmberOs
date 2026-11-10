@@ -613,7 +613,7 @@ print("\n");
 
 	keyboard_irq_enable();
 	asm volatile ("sti");
-
+	uint32_t input_length;
     while (1)
     {
 	int character;
@@ -627,7 +627,15 @@ print("\n");
 	}
 	//re-enable interrupts b4 printing
 	asm volatile("sti");
-	print_char((char)character);
+	if(character == '\b'){
+		if(input_length>0){
+			backspace();
+			input_length--;
+		}
+	}else{
+		print_char((char)character);
+		input_length++;
+	}
     }
 }
 
