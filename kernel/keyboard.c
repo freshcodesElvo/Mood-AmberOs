@@ -42,7 +42,7 @@ static const char scancode_table[128] = {
     [0x0A] = '9',
     [0x0B] = '0',
     [0x0E] = '\b',
-
+    [0x1C] = '\n',
 
     [0x10] = 'q',
     [0x11] = 'w',

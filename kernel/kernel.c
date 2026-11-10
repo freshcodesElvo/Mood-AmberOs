@@ -632,7 +632,12 @@ print("\n");
 			backspace();
 			input_length--;
 		}
-	}else{
+	}
+	else if(character == '\n'){
+		print_char('\n');
+		input_length = 0;
+	}
+	else{
 		print_char((char)character);
 		input_length++;
 	}
