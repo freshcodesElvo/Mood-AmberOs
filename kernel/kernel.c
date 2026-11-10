@@ -7,6 +7,7 @@
 #include "frame_allocator.h"
 #include "memory_test.h"
 #include "heap.h"
+#include "keyboard.h"
 #define HEAP_TEST_ALLOCATION_COUNT 128
 //#include "frame_allocator_test.h"
 
@@ -615,7 +616,18 @@ print("\n");
 
     while (1)
     {
-	asm volatile("hlt");
+	int character;
+	//prevent an interrupt btwn checking the buffer and sleeping
+	asm volatile("cli");
+	character = keyboard_getchar();
+	if(character == -1){
+		//enable interrupts and halt attomically
+		asm volatile("sti; hlt");
+		continue;
+	}
+	//re-enable interrupts b4 printing
+	asm volatile("sti");
+	print_char((char)character);
     }
 }
 
