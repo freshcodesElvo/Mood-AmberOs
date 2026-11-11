@@ -1,6 +1,8 @@
 #include "shell.h"
 #include "screen.h"
-
+void shell_prompt(void){
+	print("root@mudamba:~$ ");
+}
 //compare 2 strings
 static int string_compare(const char *str1, const char *str2){
 	while(*str1 && *str2){

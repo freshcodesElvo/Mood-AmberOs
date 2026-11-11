@@ -619,6 +619,7 @@ print("\n");
 
 	#define COMMAND_BUFFER_SIZE 128
 	char command_buffer[COMMAND_BUFFER_SIZE]={0};
+	shell_prompt();
     while (1)
     {
 	int character;
@@ -646,6 +647,7 @@ print("\n");
 		shell_execute(command_buffer);
 		input_length =0;
 		command_buffer[0] =  '\0';
+		shell_prompt();
 	}
 	else{
 		//prevent buffer overflow
