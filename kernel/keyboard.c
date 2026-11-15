@@ -78,11 +78,11 @@ static const char scancode_table[128] = {
 };
 
 // Circular keyboard buffer
-static volatile char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
+static volatile int keyboard_buffer[KEYBOARD_BUFFER_SIZE];
 
 static volatile uint32_t buffer_head = 0;
 static volatile uint32_t buffer_tail = 0;
-
+static volatile uint8_t extended_scancode = 0;
 // Retrieve a character from the buffer
 int keyboard_getchar(void)
 {
@@ -107,7 +107,7 @@ int keyboard_getchar(void)
         return -1;
     }
 
-    char character = keyboard_buffer[buffer_tail];
+    int character = keyboard_buffer[buffer_tail];
 
     buffer_tail = (buffer_tail + 1) % KEYBOARD_BUFFER_SIZE;
 
@@ -123,8 +123,64 @@ void keyboard_handler(void)
 {
     uint8_t scancode = inb(0x60);
 
-    // Ignore unsupported and release scancodes
-    if (scancode >= 128)
+    // Detect extended scancode prefix
+    if (scancode == 0xE0)
+    {
+        extended_scancode = 1;
+        outb(0x20, 0x20);
+        return;
+    }
+
+    // Handle the next byte after an extended prefix
+    if (extended_scancode)
+    {
+        extended_scancode = 0;
+
+        // Ignore extended key releases for now
+        if (scancode & 0x80)
+        {
+            outb(0x20, 0x20);
+            return;
+        }
+
+        // Arrow keys: Set 1 scancodes
+
+	int key =0;
+        switch (scancode)
+        {
+            case 0x48:
+                // Up arrow
+		key = KEY_UP;
+                break;
+
+            case 0x50:
+                // Down arrow
+		key=KEY_DOWN;
+                break;
+
+            case 0x4B:
+                // Left arrow
+                break;
+
+            case 0x4D:
+                // Right arrow
+                break;
+        }
+	if(key !=0){
+		uint32_t next_head = (buffer_head+1)%KEYBOARD_BUFFER_SIZE;
+		if(next_head !=buffer_tail){
+			keyboard_buffer[buffer_head] = key;
+			buffer_head = next_head;
+	
+		}
+	}
+
+        outb(0x20, 0x20);
+        return;
+    }
+
+    // Ignore ordinary key releases
+    if (scancode & 0x80)
     {
         outb(0x20, 0x20);
         return;
@@ -138,7 +194,6 @@ void keyboard_handler(void)
         uint32_t next_head =
             (buffer_head + 1) % KEYBOARD_BUFFER_SIZE;
 
-        // Check whether the buffer is full
         if (next_head != buffer_tail)
         {
             keyboard_buffer[buffer_head] = character;
@@ -146,7 +201,5 @@ void keyboard_handler(void)
         }
     }
 
-    // Send End Of Interrupt to master PIC
     outb(0x20, 0x20);
 }
-

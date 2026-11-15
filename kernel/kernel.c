@@ -633,7 +633,52 @@ print("\n");
 	}
 	//re-enable interrupts b4 printing
 	asm volatile("sti");
-	if(character == '\b'){
+	
+	if(character == KEY_UP){
+		const char *previous = shell_history_up();
+		if(previous !=0){
+			//erase the current input from the screen
+			while(input_length>0){
+				backspace();
+				input_length--;
+			}
+			//copy recalled commands  int o the input buffer
+			while(previous[input_length] !='\0' && input_length < COMMAND_BUFFER_SIZE-1){
+				command_buffer[input_length]= previous[input_length];
+				print_char(previous[input_length]);
+				input_length++;
+			}
+			command_buffer[input_length]='\0';
+		}
+	}
+
+
+	else if (character == KEY_DOWN)
+	{
+   		 const char *next = shell_history_down();
+	
+   		 if (next != 0)
+  		{
+       			 // Erase current input
+       			 while (input_length > 0)
+       			 {
+           			 backspace();
+           			 input_length--;
+       			 }
+
+       			 // Display the next command
+       			 while (next[input_length] != '\0' &&
+            		   input_length < COMMAND_BUFFER_SIZE - 1)
+       				 {
+           			 command_buffer[input_length] = next[input_length];
+           			 print_char(next[input_length]);
+           			 input_length++;
+       			 	}
+
+      				  command_buffer[input_length] = '\0';
+   				 }
+			}
+	else if(character == '\b'){
 		if(input_length>0){
 			backspace();
 			input_length--;
@@ -644,6 +689,11 @@ print("\n");
 		//mark the end of the command
 		command_buffer[input_length]='\0';
 		print_char('\n');
+		
+
+		//save command before executing it
+		shell_history_add(command_buffer);
+		//execute
 		shell_execute(command_buffer);
 		input_length =0;
 		command_buffer[0] =  '\0';
