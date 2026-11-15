@@ -14,13 +14,14 @@ void shell_autocomplete(char *command, uint32_t *length, uint32_t capacity){
 	static const char *commands[]={
 		"help",
 		"about",
-		"clear"
+		"clear",
+		"echo"
 	};
 	const char *match = 0;
 	uint32_t matches = 0;
 
 	//find commands matching what user types
-	for(uint32_t i=0;i<3;i++){
+	for(uint32_t i=0;i<4;i++){
 		uint32_t j=0;
 		int matches_prefix=1;
 		while(j<*length){
@@ -61,36 +62,78 @@ static int string_compare(const char *str1, const char *str2){
 	}
 	return(*str1 =='\0' && *str2 == '\0')?0:1;
 }
+
+static const char *skip_spaces(const char *text){
+	while(*text == ' '){
+		text++;
+	}
+	return text;
+}
+
+
 // Execute shell commands
+
+
 void shell_execute(const char *command)
 {
-    if (string_compare(command, "help") == 0)
+    // Skip leading spaces
+    command = skip_spaces(command);
+
+    char command_name[32];
+    uint32_t i = 0;
+
+    // Copy the command name
+    while (command[i] != '\0' &&
+           command[i] != ' ' &&
+           i < sizeof(command_name) - 1)
+    {
+        command_name[i] = command[i];
+        i++;
+    }
+
+    command_name[i] = '\0';
+
+    // Locate the arguments
+    const char *args = skip_spaces(command + i);
+
+    if (string_compare(command_name, "help") == 0)
     {
         print("Available commands:\n");
         print("help  - Show available commands\n");
         print("about - About Mood-Amber OS\n");
         print("clear - Clear the screen\n");
+        print("echo  - Display text\n");
     }
-    else if (string_compare(command, "about") == 0)
+    else if (string_compare(command_name, "about") == 0)
     {
         print("Mood-Amber OS\n");
         print("A hobby operating system developed from scratch!\n");
     }
-    else if (string_compare(command, "clear") == 0)
+    else if (string_compare(command_name, "clear") == 0)
     {
         clear_screen();
     }
-    else if (command[0] == '\0')
+    else if (string_compare(command_name, "echo") == 0)
+    {
+        print(args);
+        print("\n");
+    }
+    else if (*command_name == '\0')
     {
         // Ignore empty commands
     }
     else
     {
         print("Unknown command: ");
-        print(command);
+        print(command_name);
         print("\n");
     }
 }
+
+
+
+
+
 void shell_history_add(const char *command){
 	//no saving empty commands
 	if(command[0] == '\0')
