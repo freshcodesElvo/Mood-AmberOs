@@ -678,6 +678,11 @@ print("\n");
       				  command_buffer[input_length] = '\0';
    				 }
 			}
+	else if(character ==KEY_TAB){
+		shell_autocomplete(
+			command_buffer, &input_length, COMMAND_BUFFER_SIZE
+		);		
+	}
 	else if(character == '\b'){
 		if(input_length>0){
 			backspace();

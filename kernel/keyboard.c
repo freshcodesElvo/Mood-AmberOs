@@ -43,6 +43,7 @@ static const char scancode_table[128] = {
     [0x0B] = '0',
     [0x0E] = '\b',
     [0x1C] = '\n',
+    
 
     [0x10] = 'q',
     [0x11] = 'w',
@@ -187,8 +188,12 @@ void keyboard_handler(void)
     }
 
     // Translate scancode into a character
-    char character = scancode_table[scancode];
-
+    int character;
+	if(scancode==0x0F){
+		character = KEY_TAB;
+	}else{
+		character=scancode_table[scancode];
+	}
     if (character != 0)
     {
         uint32_t next_head =

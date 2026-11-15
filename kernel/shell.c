@@ -9,6 +9,44 @@ static  uint32_t history_count = 0;
 static uint32_t history_next = 0;
 static int  history_position = -1;
 
+
+void shell_autocomplete(char *command, uint32_t *length, uint32_t capacity){
+	static const char *commands[]={
+		"help",
+		"about",
+		"clear"
+	};
+	const char *match = 0;
+	uint32_t matches = 0;
+
+	//find commands matching what user types
+	for(uint32_t i=0;i<3;i++){
+		uint32_t j=0;
+		int matches_prefix=1;
+		while(j<*length){
+			if(commands[i][j]=='\0' || command[j] != commands[i][j]){
+				matches_prefix = 0;
+				break;
+			}
+			j++;
+		}
+		if(matches_prefix){
+			match=commands[i];
+			matches++;
+		}
+	}
+	//complete only when there is one match exactly
+	if(matches==1){
+		while(match[*length] !='\0' && *length<capacity-1){
+			command[*length]=match[*length];
+			print_char(match[*length]);
+
+			(*length)++;
+
+		}
+		command[*length]='\0';
+	}
+}
 void shell_prompt(void){
 	print("root@mudamba:~$ ");
 }
