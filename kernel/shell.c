@@ -8,20 +8,22 @@ static char command_history[HISTORY_SIZE][COMMAND_BUFFER_SIZE];
 static  uint32_t history_count = 0;
 static uint32_t history_next = 0;
 static int  history_position = -1;
-
+static char current_directory[128] = "/";
 
 void shell_autocomplete(char *command, uint32_t *length, uint32_t capacity){
 	static const char *commands[]={
 		"help",
 		"about",
 		"clear",
-		"echo"
+		"echo",
+	 	"pwd",
+	       	"cd",
 	};
 	const char *match = 0;
 	uint32_t matches = 0;
 
 	//find commands matching what user types
-	for(uint32_t i=0;i<4;i++){
+	for(uint32_t i=0;i<6;i++){
 		uint32_t j=0;
 		int matches_prefix=1;
 		while(j<*length){
@@ -70,6 +72,82 @@ static const char *skip_spaces(const char *text){
 	return text;
 }
 
+//change dir
+static void change_directory(const char *path){
+	//move to the root dir
+	if(string_compare(path, "/")==0){
+		current_directory[0]='/';
+		current_directory[1]='\0';
+		return;
+	}
+	//move one dir level up
+	if (string_compare(path, "..") == 0)
+{
+    uint32_t length = 0;
+
+    // Find the string length
+    while (current_directory[length] != '\0')
+    {
+        length++;
+    }
+
+    // Don't go above root
+    if (length <= 1)
+    {
+        return;
+    }
+
+    // Remove trailing directory characters
+    while (length > 1 && current_directory[length - 1] != '/')
+    {
+        length--;
+    }
+
+    // Remove the final slash, unless it is root
+    if (length > 1)
+    {
+        length--;
+    }
+
+    // Terminate the updated path
+    current_directory[length] = '\0';
+
+    return;
+}
+	//return to root if path is empty
+	if(path[0]=='\0'){
+		return;
+	}
+	//move  into a dir
+	uint32_t current_length = 0;
+	while(current_directory[current_length] !='\0'){
+		current_length++;
+		
+	}
+	uint32_t path_length=0;
+	while(path[path_length] !='\0'){
+		path_length++;
+	}
+	//add  a slash if we are not already at root
+	if(current_length>1){
+		if(current_length+1 >= sizeof(current_directory)){
+			return;
+		}
+		current_directory[current_length++]='/';
+		
+	}
+	//check buffer capacty
+	if(current_length + path_length >=sizeof(current_directory)){
+		return;
+	}
+	//copy the dir name
+	for(uint32_t i = 0; i<path_length; i++){
+		current_directory[current_length +i] =path[i];
+	}
+	current_directory[current_length + path_length] = '\0';
+	
+}
+
 
 // Execute shell commands
 
@@ -103,11 +181,21 @@ void shell_execute(const char *command)
         print("about - About Mood-Amber OS\n");
         print("clear - Clear the screen\n");
         print("echo  - Display text\n");
+	print("pwd - print current working directory");
+	print("cd - change working director\n");
     }
     else if (string_compare(command_name, "about") == 0)
     {
         print("Mood-Amber OS\n");
         print("A hobby operating system developed from scratch!\n");
+    }
+    else if(string_compare(command_name, "pwd") == 0){
+	print(current_directory);
+	print("\n");	
+    }
+    else if(string_compare(command_name, "cd")==0){
+	change_directory(args);	
+    
     }
     else if (string_compare(command_name, "clear") == 0)
     {
@@ -141,7 +229,7 @@ void shell_history_add(const char *command){
 	uint32_t i = 0;
 	
 	//copy commands into the nxt history slot
-	while(command[i] != '\n' && i<COMMAND_BUFFER_SIZE -1){
+	while(command[i] != '\0' && i<COMMAND_BUFFER_SIZE -1){
 		command_history[history_next][i]=command[i];
 		i++;
 	}
