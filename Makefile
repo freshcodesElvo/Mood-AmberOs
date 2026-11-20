@@ -4,7 +4,7 @@ ASM=nasm
 CC=gcc
 LD=ld
 
-CFLAGS=-m32 -ffreestanding -fno-pie -fno-stack-protector -Iinclude
+CFLAGS=-g -m32 -ffreestanding -fno-pie -fno-stack-protector -Iinclude
 LDFLAGS=-m elf_i386
 
 all: os.iso
@@ -49,8 +49,11 @@ build/keyboard.o: kernel/keyboard.c
 build/shell.o: kernel/shell.c
 	$(CC) $(CFLAGS) -c kernel/shell.c -o build/shell.o
 
-build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/memory_test.o build/heap.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o build/keyboard.o build/shell.o linker.ld
-	$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/memory_test.o build/heap.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o build/keyboard.o build/shell.o -o build/kernel.bin
+build/ramfs.o: kernel/ramfs.c include/ramfs.h
+	$(CC) $(CFLAGS) -c kernel/ramfs.c -o build/ramfs.o
+
+build/kernel.bin: build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/memory_test.o build/heap.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o build/keyboard.o build/shell.o build/ramfs.o linker.ld
+	$(LD) $(LDFLAGS) -T linker.ld build/boot.o build/kernel.o build/screen.o build/paging.o build/frame_allocator.o build/memory_test.o build/heap.o build/interrupts.o build/idt.o build/idt_load.o build/interrupt_handlers.o build/interrupt_handlers_c.o build/keyboard.o build/shell.o build/ramfs.o -o build/kernel.bin
 
 
 

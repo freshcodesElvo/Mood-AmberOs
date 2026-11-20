@@ -9,6 +9,7 @@
 #include "heap.h"
 #include "keyboard.h"
 #include "shell.h"
+#include "ramfs.h"
 #define HEAP_TEST_ALLOCATION_COUNT 128
 //#include "frame_allocator_test.h"
 
@@ -612,14 +613,163 @@ print("\n");
 		}
 	}
 	print("--------------- block splitting test done -----------------\n");
+	print("\nInitializing RAM filesystem...\n");
 
+ramfs_init();
+
+if (ramfs_root() != 0) {
+    print("RAMFS initialized successfully!\n");
+} else {
+    print("RAMFS initialization failed!\n");
+}
+
+
+ramfs_node_t *documents =  ramfs_create_directory(ramfs_root(), "documents");
+if(documents !=0){
+	print("Dir created: document\n");
+	
+}else{
+	print("Dir: creation failed!\n");
+}
 	keyboard_irq_enable();
 	asm volatile ("sti");
 	uint32_t input_length;
 
+
+
+print("\nTesting RAMFS lookup ......\n");
+//test 1 find an existing dir
+ramfs_node_t *found = ramfs_find(ramfs_root(), "documents");
+if(found==documents){
+	print("SUCCESS: found docs dir\n");
+	
+}else{
+	print("Failed: couldnt finf docs\n");
+}
+//test2: serach for a dir that doesnt exist
+ramfs_node_t *missing = ramfs_find(ramfs_root(),"downloads");
+if(missing==0){
+	print("SUCCESS: missing dir correctly rejected\n");
+
+}else{
+	print("Failed: unexpected dir found\n");
+}
+
+
+print("\n testing ramfs file creation............\n");
+//create  a file inside docs
+ramfs_node_t *notes = ramfs_create_file(documents, "notes.txt");
+if(notes !=0){
+	print("success: note created\n");
+	
+}else{
+	print("Failed:: could not create notes\n");
+}
+
+//verify that the file exists
+ramfs_node_t  *found_file =ramfs_find(documents,"notes.txt");
+if(found_file == notes){
+	print("success: file look up works\n");
+	
+}else{
+	
+	print("file lookup is not working\n");
+}
+//try create the same file again
+ramfs_node_t *duplicate = ramfs_create_file(documents, "notes.txt");
+if(duplicate ==0){
+	print("Success:: duplicate file rejected\n");
+}else{
+	print("failed: duplicate file name accepted\n");
+}
+
+/*
+print("testing ramfs file writing.......\n");
+int bytes_written = ramfs_write_file(notes, "Hello from Mood Amber OS!!");
+if(bytes_written>0){
+	print("Succes: Data written to notes.txt!\n ");
+	print("bytes written");
+	print_hex((uint32_t)bytes_written);
+	print("\n");
+	
+
+}else{
+	print("failed: could not write to file\n");
+}
+
+//verify the stored contents
+if(notes->data[0]=='H' && notes->data[1]=='e' && notes->data[2] == 'l'){
+	print("Success:: file contents verified!!\n");
+
+}else{
+	print("failed: file contents incorrect\n");
+}
+//verify the recorded file size
+if(notes->size ==(uint32_t)bytes_written){
+	print("success:: file size recorded succesfully\n");
+}else{
+	print("failed: incorrect file size\n");
+}
+*/
+
+print("\nTesting RAMFS file writing...\n");
+
+int bytes_written = ramfs_write_file(
+    notes,
+    "Hello from Mood-Amber OS!"
+);
+
+if (bytes_written > 0) {
+    print("SUCCESS: Data written to notes.txt!\n");
+    print("Bytes written: ");
+    print_hex((uint32_t)bytes_written);
+    print("\n");
+} else {
+    print("FAILED: Could not write to file!\n");
+}
+
+// Verify the stored contents
+if (notes->data[0] == 'H' &&
+    notes->data[1] == 'e' &&
+    notes->data[2] == 'l') {
+    print("SUCCESS: File contents verified!\n");
+} else {
+    print("FAILED: File contents incorrect!\n");
+}
+
+// Verify the recorded file size
+if (notes->size == (uint32_t)bytes_written) {
+    print("SUCCESS: File size recorded correctly!\n");
+} else {
+    print("FAILED: Incorrect file size!\n");
+}
+
+
+print("testing ramfs reading....\n");
+char read_buffer[RAMFS_DATA_MAX];
+int bytes_read=ramfs_read_file(notes, read_buffer, sizeof(read_buffer));
+if(bytes_read>=0){
+	print("success: file read successfully\n");
+	print("file contents: ");
+	print(read_buffer);
+	print("\n");
+
+	print("bytes read: ");
+	print_hex((uint32_t)bytes_read);
+	print("\n");
+}else{
+	print("failed: could not rea a file\n");
+}
+
+
+
+
 	#define COMMAND_BUFFER_SIZE 128
 	char command_buffer[COMMAND_BUFFER_SIZE]={0};
 	shell_prompt();
+
+
+
     while (1)
     {
 	int character;
