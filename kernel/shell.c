@@ -165,7 +165,76 @@ static void cat_file(const char *filename){
 	print("\n");
 }
 
+static void write_file(const char *args){
+	//skip leading spaces
+	while(*args == ' '){
+		args++;
+	}
+	//extract filename
+	char filename[RAMFS_NAME_MAX];
+	uint32_t i =0;
+	
+	while(*args != '\0' && *args != ' ' && i<RAMFS_NAME_MAX-1){
+		filename[i] = *args;
+		i++;
+		args++;
+	
+	}
+	filename[i] = '\0';
 
+	//skip spaces btwn filename and content
+	while(*args==' '){
+		args++;
+	}
+	//check for opening quotation mark
+	if(*args != '"'){
+		print("Usage: write <filename> \"content\"\n");
+		return;
+	}
+	//move past opening quotation mark
+	args++;
+
+	//extract content
+	char content[RAMFS_DATA_MAX];
+	uint32_t j=0;
+	
+	while(*args != '\0' && *args !='"' && j<RAMFS_DATA_MAX-1){
+		content[j]=*args;
+		j++;
+		args++;
+		
+	}
+	content[j]='\0';
+	
+	//check for closing quotation mark
+	if(*args != '"'){
+		print("Missing closing quotation mark!\n");
+		return;
+	}
+	//find the file in the current dir
+	ramfs_node_t *file=ramfs_find(current_directory,filename);
+	if(file ==0){
+		print("file not found\n");
+		return;
+	}
+
+	//make  sure the target is a  file
+	if(file->type !=RAMFS_FILE){
+		print("not a file\n");
+		return;
+	}
+	//write the content
+	int bytes_written = ramfs_write_file(file,content);
+	if(bytes_written<0){
+		print("failed to write the file\n");
+		return;
+	}
+	print("succesfully wrote ");
+	print_hex((uint32_t)bytes_written);
+	print(" bytes to ");
+	print(filename);
+	print("\n");
+}
 
 
 
@@ -207,6 +276,7 @@ void shell_execute(const char *command)
 	print("mkdir - create a directory\n");
 	print("Touch - create an emptyor new file\n");
 	print("cat - display file contents\n");
+	print("write - Write content into a file\n");
     }
     else if (string_compare(command_name, "about") == 0)
     {
@@ -275,6 +345,9 @@ void shell_execute(const char *command)
 			return;
 		}
 		cat_file(args);
+    }
+    else if(string_compare(command_name, "write")==0){
+	write_file(args);	
     }
     else if (*command_name == '\0')
     {
