@@ -144,7 +144,26 @@ static void list_directory(void){
 
 
 
-
+//cat files
+static void cat_file(const char *filename){
+	ramfs_node_t *file = ramfs_find(current_directory, filename);
+	if(file==0){
+		print("file not found\n");
+		return;
+	}
+	if(file->type != RAMFS_FILE){
+		print("Not a file\n");
+		return;
+	}
+	char buffer[RAMFS_DATA_MAX+1];
+	int bytes_read = ramfs_read_file(file,buffer,sizeof(buffer));
+	if(bytes_read <0){
+		print("failed to red file\n");
+		return;
+	}
+	print(buffer);
+	print("\n");
+}
 
 
 
@@ -185,6 +204,9 @@ void shell_execute(const char *command)
 	print("pwd - print current working directory");
 	print("cd - change working director\n");
 	print("ls - list directory contents\n");
+	print("mkdir - create a directory\n");
+	print("Touch - create an emptyor new file\n");
+	print("cat - display file contents\n");
     }
     else if (string_compare(command_name, "about") == 0)
     {
@@ -216,6 +238,43 @@ void shell_execute(const char *command)
     }
     else if(string_compare(command_name, "ls")==0){
 	list_directory();	
+    }
+    else if(string_compare(command_name, "mkdir")==0){
+	if(args[0]=='\0'){
+		print("Usage: mkdir <directory_name>\n");
+		return;
+	}
+	ramfs_node_t *directory=ramfs_create_directory(current_directory, args);
+	if(directory !=0){
+		print("Dir created!\n");
+		print(directory->name);
+		print("\n");
+	}else{
+		print("Failed to create a directory\n");
+	}
+		
+    }
+    else if(string_compare(command_name, "touch")==0){
+	if(args[0]=='\0'){
+		print("Usage: touch <filename>\n");
+		return;
+	}	
+	ramfs_node_t *file =ramfs_create_file(current_directory, args);
+	if(file !=0){
+		print("File created \n");
+		print(file->name);
+		print("\n");
+		
+	}else{
+		print("failed to create file\n");
+	}
+    }
+    else if(string_compare(command_name, "cat")==0){
+		if(args[0]=='\0'){
+			print("Usage: cat <filename>\n");
+			return;
+		}
+		cat_file(args);
     }
     else if (*command_name == '\0')
     {
