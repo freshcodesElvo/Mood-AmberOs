@@ -23,6 +23,7 @@ void shell_autocomplete(char *command, uint32_t *length, uint32_t capacity){
 		"echo",
 	 	"pwd",
 	       	"cd",
+		"cat", "append", "mkdir", "write"
 	};
 	const char *match = 0;
 	uint32_t matches = 0;
@@ -164,7 +165,7 @@ static void cat_file(const char *filename){
 	print(buffer);
 	print("\n");
 }
-
+//write file
 static void write_file(const char *args){
 	//skip leading spaces
 	while(*args == ' '){
@@ -236,7 +237,101 @@ static void write_file(const char *args){
 	print("\n");
 }
 
+static void append_file(const char *args)
+{
+    // Skip leading spaces
+    while (*args == ' ')
+    {
+        args++;
+    }
 
+    // Extract filename
+    char filename[RAMFS_NAME_MAX];
+    uint32_t i = 0;
+
+    while (*args != '\0' && *args != ' ' &&
+           i < RAMFS_NAME_MAX - 1)
+    {
+        filename[i] = *args;
+        i++;
+        args++;
+    }
+
+    filename[i] = '\0';
+
+    if (i == 0)
+    {
+        print("Usage: append <filename> \"content\"\n");
+        return;
+    }
+
+    // Skip spaces between filename and content
+    while (*args == ' ')
+    {
+        args++;
+    }
+
+    // Check opening quotation mark
+    if (*args != '"')
+    {
+        print("Usage: append <filename> \"content\"\n");
+        return;
+    }
+
+    args++;
+
+    // Extract content
+    char content[RAMFS_DATA_MAX];
+    uint32_t j = 0;
+
+    while (*args != '\0' && *args != '"' &&
+           j < RAMFS_DATA_MAX - 1)
+    {
+        content[j] = *args;
+        j++;
+        args++;
+    }
+
+    content[j] = '\0';
+
+    // Check closing quotation mark
+    if (*args != '"')
+    {
+        print("Missing closing quotation mark!\n");
+        return;
+    }
+
+    // Find the target file
+    ramfs_node_t *file =
+        ramfs_find(current_directory, filename);
+
+    if (file == 0)
+    {
+        print("File not found!\n");
+        return;
+    }
+
+    if (file->type != RAMFS_FILE)
+    {
+        print("Not a file!\n");
+        return;
+    }
+
+    // Append the content
+    int bytes_written = ramfs_append_file(file, content);
+
+    if (bytes_written < 0)
+    {
+        print("Failed to append to file. Check available space!\n");
+        return;
+    }
+
+    print("Successfully appended ");
+    print_hex((uint32_t)bytes_written);
+    print(" bytes to ");
+    print(filename);
+    print("\n");
+}
 
 // Execute shell commands
 
@@ -277,6 +372,8 @@ void shell_execute(const char *command)
 	print("Touch - create an emptyor new file\n");
 	print("cat - display file contents\n");
 	print("write - Write content into a file\n");
+	print("append - Append content into a file\n");
+
     }
     else if (string_compare(command_name, "about") == 0)
     {
@@ -349,6 +446,17 @@ void shell_execute(const char *command)
     else if(string_compare(command_name, "write")==0){
 	write_file(args);	
     }
+   /* else if(string_compare(command_name, "append")==0){
+   	append_file(args);
+    }*/
+
+	else if(string_compare(command_name, "append")==0){
+    print("DEBUG: append arguments = [");
+    print(args);
+    print("]\n");
+
+    append_file(args);
+}
     else if (*command_name == '\0')
     {
         // Ignore empty commands

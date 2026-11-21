@@ -196,6 +196,37 @@ int ramfs_write_file(ramfs_node_t *file, const char *data){
 	file->size = length;
 	return (int)length;
 }
+
+
+//append content into a file
+int ramfs_append_file(ramfs_node_t *file, const char *data){
+	//validate the file
+	if(file==0||data==0){
+		return -1;
+	
+	}
+	if(file->type != RAMFS_FILE){
+		return -1;
+	}
+	//find the length of the incoming data
+	uint32_t length =0;
+	while(data[length] != '\0'){
+		length++;
+	}
+	//check whether the new content fits
+	if(file->size+length>=RAMFS_DATA_MAX){
+		return -1;
+	}
+	//copy new content to the end of existing content
+	for(uint32_t i = 0; i<length;i++){
+		file->data[file->size+i]=data[i];
+		
+	}
+	//update file size and terminate the string 
+	file->size +=length;
+	file->data[file->size]='\0';
+	return (int)length;
+}
 int ramfs_read_file(ramfs_node_t *file, char *buffer, uint32_t buffer_size){
 	//1 validate iputs
 	if(file==0 || file->type != RAMFS_FILE || buffer==0 || buffer_size ==0){return -1;}
