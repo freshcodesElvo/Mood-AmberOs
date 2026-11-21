@@ -683,34 +683,7 @@ if(duplicate ==0){
 	print("failed: duplicate file name accepted\n");
 }
 
-/*
-print("testing ramfs file writing.......\n");
-int bytes_written = ramfs_write_file(notes, "Hello from Mood Amber OS!!");
-if(bytes_written>0){
-	print("Succes: Data written to notes.txt!\n ");
-	print("bytes written");
-	print_hex((uint32_t)bytes_written);
-	print("\n");
-	
 
-}else{
-	print("failed: could not write to file\n");
-}
-
-//verify the stored contents
-if(notes->data[0]=='H' && notes->data[1]=='e' && notes->data[2] == 'l'){
-	print("Success:: file contents verified!!\n");
-
-}else{
-	print("failed: file contents incorrect\n");
-}
-//verify the recorded file size
-if(notes->size ==(uint32_t)bytes_written){
-	print("success:: file size recorded succesfully\n");
-}else{
-	print("failed: incorrect file size\n");
-}
-*/
 
 print("\nTesting RAMFS file writing...\n");
 
@@ -760,6 +733,37 @@ if(bytes_read>=0){
 }else{
 	print("failed: could not rea a file\n");
 }
+
+
+print("testing ramfs dir traversal................\n");
+ramfs_node_t *current = ramfs_first_child(ramfs_root());
+while(current !=0){
+	print("found entry: ");
+	print(current->name);
+	
+	if(current->type == RAMFS_DIRECTORY){
+		print("[DIRECTORY]");
+		
+	}else if(current->type==RAMFS_FILE){
+		print(" [FILE]");
+		
+	}
+	print("\n");
+	current = current->next_sibling;
+
+}
+
+
+
+
+
+
+
+shell_init();
+
+
+
+
 
 
 

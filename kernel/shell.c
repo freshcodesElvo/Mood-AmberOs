@@ -1,15 +1,20 @@
 #include "shell.h"
 #include "screen.h"
 #include <stdint.h>
+#include "ramfs.h"
 #define HISTORY_SIZE 10
 #define COMMAND_BUFFER_SIZE 128
 
 static char command_history[HISTORY_SIZE][COMMAND_BUFFER_SIZE];
-static  uint32_t history_count = 0;
+static uint32_t history_count = 0;
 static uint32_t history_next = 0;
 static int  history_position = -1;
-static char current_directory[128] = "/";
+//static char current_directory[128] = "/";
+static ramfs_node_t *current_directory = 0;
 
+void shell_init(void){
+	current_directory=ramfs_root();
+}
 void shell_autocomplete(char *command, uint32_t *length, uint32_t capacity){
 	static const char *commands[]={
 		"help",
@@ -73,80 +78,76 @@ static const char *skip_spaces(const char *text){
 }
 
 //change dir
-static void change_directory(const char *path){
-	//move to the root dir
-	if(string_compare(path, "/")==0){
-		current_directory[0]='/';
-		current_directory[1]='\0';
+static  void change_directory(const char *path){
+	if(current_directory==0){
+		print("file syst not initialized !! \n");
 		return;
 	}
-	//move one dir level up
-	if (string_compare(path, "..") == 0)
-{
-    uint32_t length = 0;
-
-    // Find the string length
-    while (current_directory[length] != '\0')
-    {
-        length++;
-    }
-
-    // Don't go above root
-    if (length <= 1)
-    {
-        return;
-    }
-
-    // Remove trailing directory characters
-    while (length > 1 && current_directory[length - 1] != '/')
-    {
-        length--;
-    }
-
-    // Remove the final slash, unless it is root
-    if (length > 1)
-    {
-        length--;
-    }
-
-    // Terminate the updated path
-    current_directory[length] = '\0';
-
-    return;
-}
-	//return to root if path is empty
+	//return to root
+	if(string_compare(path, "/")==0){
+		current_directory = ramfs_root();
+		return;
+	}
+	//move to parent dir
+	if(string_compare(path, "..")==0){
+		if(current_directory->parent !=0){
+			current_directory=current_directory->parent;
+		}
+		return;
+	}
+	//ignore empty paths
 	if(path[0]=='\0'){
 		return;
 	}
-	//move  into a dir
-	uint32_t current_length = 0;
-	while(current_directory[current_length] !='\0'){
-		current_length++;
-		
-	}
-	uint32_t path_length=0;
-	while(path[path_length] !='\0'){
-		path_length++;
-	}
-	//add  a slash if we are not already at root
-	if(current_length>1){
-		if(current_length+1 >= sizeof(current_directory)){
-			return;
-		}
-		current_directory[current_length++]='/';
-		
-	}
-	//check buffer capacty
-	if(current_length + path_length >=sizeof(current_directory)){
+	//search for the requested dir
+	ramfs_node_t  *target = ramfs_find(current_directory,path);
+	if(target==0){
+		print("dir not found\n");
 		return;
 	}
-	//copy the dir name
-	for(uint32_t i = 0; i<path_length; i++){
-		current_directory[current_length +i] =path[i];
+	if(target->type !=RAMFS_DIRECTORY){
+		print("not a dir\n");
+		return;
 	}
-	current_directory[current_length + path_length] = '\0';
-	
+	//change the current working dir
+	current_directory=target;
 }
+
+
+
+/*
+
+*/
+
+
+
+
+
+//implement ls command
+static void list_directory(void){
+	if(current_directory==0){
+		print("no current  directory!\n");
+		return;
+	}
+	ramfs_node_t *current=ramfs_first_child(current_directory);
+	while(current !=0){
+		print(current->name);
+		if(current->type == RAMFS_DIRECTORY){
+			print("\n");
+			
+		}
+		print("\n");
+		current = current->next_sibling;
+	}
+
+}
+
+
+
+
+
+
+
 
 
 // Execute shell commands
@@ -183,6 +184,7 @@ void shell_execute(const char *command)
         print("echo  - Display text\n");
 	print("pwd - print current working directory");
 	print("cd - change working director\n");
+	print("ls - list directory contents\n");
     }
     else if (string_compare(command_name, "about") == 0)
     {
@@ -190,8 +192,14 @@ void shell_execute(const char *command)
         print("A hobby operating system developed from scratch!\n");
     }
     else if(string_compare(command_name, "pwd") == 0){
-	print(current_directory);
-	print("\n");	
+	if(current_directory == ramfs_root()){
+		print("/");
+		
+		
+	}else{
+		print(current_directory->name);
+	}
+	print("\n");
     }
     else if(string_compare(command_name, "cd")==0){
 	change_directory(args);	
@@ -205,6 +213,9 @@ void shell_execute(const char *command)
     {
         print(args);
         print("\n");
+    }
+    else if(string_compare(command_name, "ls")==0){
+	list_directory();	
     }
     else if (*command_name == '\0')
     {

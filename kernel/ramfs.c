@@ -64,7 +64,7 @@ ramfs_node_t *ramfs_create_directory(ramfs_node_t *parent, const char *name){
 	ramfs_node_t *current = parent->children;
 	while(current !=0){
 		uint32_t i =0;
-		while(current->name[i]==name[i] !='\0'){
+		while(current->name[i]==name[i] && name[i] !='\0'){
 			i++;
 		}
 		if(current->name[i]=='\0' && name[i]=='\0'){
@@ -123,7 +123,14 @@ ramfs_node_t *ramfs_find(ramfs_node_t *parent, const char *name)
     // No matching node found
     return 0;
 }
-
+ramfs_node_t *ramfs_first_child(ramfs_node_t *directory){
+	//validate taht the node exists and is a dir
+	if(directory==0 || directory->type !=RAMFS_DIRECTORY){
+		return 0;
+	}
+	//return the 1st child
+	return directory->children;
+}
 
 ramfs_node_t *ramfs_create_file(ramfs_node_t *parent, const char *name){
 	//1 validate inputs
