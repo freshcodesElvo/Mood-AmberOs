@@ -369,6 +369,41 @@ static void remove_file(const char *args){
 	}
 }
 
+
+
+//remove dir
+static void remove_directory(const char *args){
+	//skip leading spaces
+	while(*args == ' '){
+		args++;
+	}
+	if(*args =='\0'){
+		print("usage rmdir <directory>\n");
+		return;
+		
+	}
+	//extract dir name
+	char dirname[RAMFS_NAME_MAX];
+	uint32_t i =0;
+	while(*args != '\0' && *args != ' ' && 	 i< RAMFS_NAME_MAX-1){
+		dirname[i]= *args;
+		i++;
+		args++;
+	}
+	dirname[i]='\0';
+	//check for an exessively long name
+	if(*args !='\0' && *args !=' '){
+		print("directory name too long\n");
+		return;
+	}
+	//remove the dir
+	int result = ramfs_remove_directory(current_directory, dirname);
+	if(result ==0){
+		print("directory removed succesfully\n");
+	}else{
+		print("failed to remove directory. it may not exist, be non empty or not be a directory\n");
+	}
+}
 // Execute shell commands
 
 
@@ -409,7 +444,8 @@ void shell_execute(const char *command)
 	print("cat - display file contents\n");
 	print("write - Write content into a file\n");
 	print("append - Append content into a file\n");
-	print("rm - delete a directory or a file");
+	print("rm - delete a file");
+	print("rmdir - remove an empty directory\n");
 
     }
     else if (string_compare(command_name, "about") == 0)
@@ -495,6 +531,9 @@ void shell_execute(const char *command)
     }
     else if(string_compare(command_name, "rm")==0){
 	remove_file(args);
+    }
+    else if(string_compare(command_name, "rmdir")==0){
+    	remove_directory(args);
     }
     else if (*command_name == '\0')
     {
