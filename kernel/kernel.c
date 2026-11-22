@@ -790,7 +790,49 @@ if(new_file== notes){
 print("ramfs deletion tests finished\n");
 
 
+print("===========testing ramfs dir deleting============\n");
+print("\testing ramfs dir deletion..........................\n");
+//1 create an empty dir
+ramfs_node_t *empty_dir = ramfs_create_directory(documents, "empty");
+	if(empty_dir !=0){
+		print("success: empty dir created\n");
+		
+	}else{
+		print("failed could not create a dir\n");
+	}
+//test 2
+int result =ramfs_remove_directory(documents, "empty");
+if(result ==0){
+	print("success: empty dir removed\n");
+}
+else{
+	print("failed: could not remoc=ve empty dir");
+}
+//test 3 verify that it nolonger exists
+ramfs_node_t *removed_dir = ramfs_find(documents, "empty");
+if(removed_dir ==0){
+	print("success: removed dir could not be found\n");
+}
+else{
+	print("failed: dir still exists!\n");
+}
 
+//test4 create a dir containing afile
+ramfs_node_t *projects = ramfs_create_directory(documents, "projects");
+if(projects !=0){
+	ramfs_create_file(projects, "hello.c");
+	
+}
+//5 attempt to remove a non empty dir
+result = ramfs_remove_directory(documents, "projects");
+if(result ==-1){
+	print("success: non empty dir deletion rejected!\n");
+
+}else{
+	print("failed: non empty dir was deleted\n" );
+}
+	
+print("ramfs dir deletion test finished!\n");
 
 
 	shell_init();

@@ -231,6 +231,56 @@ int ramfs_remove_file(ramfs_node_t *parent, const char *name){
 	return 0;
 }
 
+
+//remove dir
+int ramfs_remove_directory(ramfs_node_t *parent, const char *name){
+	//validate
+	if(parent ==0|| parent->type != RAMFS_DIRECTORY || name ==0 || name[0] == '\0'){
+		return -1;
+	}
+	ramfs_node_t *current = parent->children;
+	ramfs_node_t *previous = 0;
+	//search for the dir
+	while(current !=0){
+		uint32_t i = 0;
+		while(current->name[i]==name[i] && name[i] != '\0'){
+			i++;
+		}
+		if(current->name[i]=='\0' && name[i]=='\0'){
+			break;
+		}
+		previous=current;
+		current=current->next_sibling;
+		
+	}
+	//dir not found
+	if(current == 0){return -1;}
+	//only allow dirs
+	if(current->type !=RAMFS_DIRECTORY){
+		return -1;
+	}
+	//reject non-empty dirs
+	if(current->children !=0){
+		return -1;
+	}
+	//unlink from parent's chldren list
+	if(previous ==0){
+		parent->children = current->next_sibling;
+	}
+	else{
+		previous->next_sibling = current->next_sibling;
+
+	}
+	//return node to free-node list
+	current->name[0] = '\0';
+	current->parent=0;
+	current->children=0;
+	current->size =0;
+
+	current->next_sibling = free_nodes;
+	free_nodes=current;
+	return 0;
+}
 int ramfs_write_file(ramfs_node_t *file, const char *data){
 	// validate inputs
 	if(file ==0 || file->type != RAMFS_FILE || data ==0){
