@@ -333,6 +333,42 @@ static void append_file(const char *args)
     print("\n");
 }
 
+//remove file
+static void remove_file(const char *args){
+	//skip leading spaces
+	while(*args ==' '){
+		args++;
+	}
+	//check whether a FS was provided
+	if(*args == '\0'){
+		print("usage: rm <filename>\n");
+		return;
+	}
+	//extract file name
+	char filename[RAMFS_NAME_MAX];
+	uint32_t i =0;
+	while(*args !='\0' && *args !=' ' && i< RAMFS_NAME_MAX-1){
+		filename[i]=*args;
+		i++;
+		args++;
+		
+	}	
+
+	filename[i]='\0';
+	//reject names that  exeeds the supported length
+	if(*args !='\0' && *args!=' '){
+		print("file name too long\n");
+		return;
+	}
+	//remove the file from the current dir
+	int result = ramfs_remove_file(current_directory, filename);
+	if(result ==0){
+		print("file deleted succesfully\n");
+	}else{
+		print("failed to delete file : the file may not exist or might be a directorv.\n");
+	}
+}
+
 // Execute shell commands
 
 
@@ -373,6 +409,7 @@ void shell_execute(const char *command)
 	print("cat - display file contents\n");
 	print("write - Write content into a file\n");
 	print("append - Append content into a file\n");
+	print("rm - delete a directory or a file");
 
     }
     else if (string_compare(command_name, "about") == 0)
@@ -450,13 +487,15 @@ void shell_execute(const char *command)
    	append_file(args);
     }*/
 
-	else if(string_compare(command_name, "append")==0){
-    print("DEBUG: append arguments = [");
-    print(args);
-    print("]\n");
-
-    append_file(args);
-}
+    else if(string_compare(command_name, "append")==0){
+   	 print("DEBUG: append arguments = [");
+   	 print(args);
+   	 print("]\n");
+   	 append_file(args);
+    }
+    else if(string_compare(command_name, "rm")==0){
+	remove_file(args);
+    }
     else if (*command_name == '\0')
     {
         // Ignore empty commands
