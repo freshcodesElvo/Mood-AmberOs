@@ -35,6 +35,7 @@ ramfs_node_t *ramfs_root(void);
 ramfs_node_t *ramfs_create_directory(ramfs_node_t *parent, const char *name);
 ramfs_node_t *ramfs_find(ramfs_node_t *parent, const char *name);
 ramfs_node_t *ramfs_create_file(ramfs_node_t *parent, const char *name);
+int ramfs_remove_file(ramfs_node_t *parent, const char *name);
 int ramfs_write_file(ramfs_node_t *file, const char *data);
 int ramfs_append_file(ramfs_node_t *file, const char *data);
 int ramfs_read_file(ramfs_node_t *file, char *buffer, uint32_t buffer_size);

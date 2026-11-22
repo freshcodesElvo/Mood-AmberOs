@@ -754,20 +754,46 @@ while(current !=0){
 }
 
 
+//========testing ramfs file delition=========
+
+print("testing ramfs file delrtion rm\n");
+//test1 delete notes.txt
+int delete_results=ramfs_remove_file(documents, "notes.txt");
+if(delete_results==0){
+	print("Success: notes.txt deleted!\n");	
+}
+else{
+	print("Failed: couldnt delete notes.txt");
+}
+
+//test 2 verify the file nolonger exixsts
+ramfs_node_t *deleted_file = ramfs_find(documents, "notes.txt");
+
+if(deleted_file==0){
+	print("Success: deleted file could not be found\n");
+}else{
+	print("Failed: deleted file still exists\n");
+}
+//test3 create another file
+ramfs_node_t *new_file = ramfs_create_file(documents, "new.txt");
+if(new_file !=0){
+	print("Success: created new.txt!!\n");
+}else{
+	print("Failed: coud not create new.txt\n");
+}
+//test4 verufy node reuse
+if(new_file== notes){
+	print("success: deleted node was re used!\n");
+}else if(new_file !=0){
+	print("warning: new node created at a different addr\n");	
+}
+print("ramfs deletion tests finished\n");
 
 
 
 
 
-shell_init();
-
-
-
-
-
-
-
-
+	shell_init();
 	#define COMMAND_BUFFER_SIZE 128
 	char command_buffer[COMMAND_BUFFER_SIZE]={0};
 	shell_prompt();

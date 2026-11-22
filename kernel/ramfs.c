@@ -1,4 +1,4 @@
-	#include  "ramfs.h"
+#include  "ramfs.h"
 
 //fixed memory pool for file syst nodes
 static ramfs_node_t node_pool[RAMFS_MAX_NODES];
@@ -6,13 +6,28 @@ static ramfs_node_t node_pool[RAMFS_MAX_NODES];
 //keep track of allocated nodes
 static uint32_t nodes_used = 0;
 
+//list of nodes available for reuse
+static ramfs_node_t *free_nodes = 0;
+
 //root dir
 static ramfs_node_t *root = 0;
 
 //allocate a new file syst node
 static ramfs_node_t *ramfs_allocate_node(void){
-	if(nodes_used >= RAMFS_MAX_NODES){return 0;}
-	ramfs_node_t *node = &node_pool[nodes_used++];
+	ramfs_node_t *node;
+	//first try to reuse a previously freed node
+	if(free_nodes !=0){
+		node = free_nodes;
+		free_nodes= free_nodes->next_sibling;
+		
+	}else{
+		//no reusable nodes, allocate from the pool
+		if(nodes_used >=RAMFS_MAX_NODES){
+			return 0;
+
+		}
+		node =&node_pool[nodes_used++];
+	}
 	
 	//initialize node memory
 	node ->name[0] =  '\0';
@@ -32,6 +47,7 @@ static ramfs_node_t *ramfs_allocate_node(void){
 //initialize file syst
 void ramfs_init(void){
 	nodes_used =0;
+	free_nodes = 0;
 	root = ramfs_allocate_node();
 	if(root==0){
 		return;
@@ -165,6 +181,54 @@ ramfs_node_t *ramfs_create_file(ramfs_node_t *parent, const char *name){
 	parent->children = file;
 	return file;
 
+}
+
+//remove (rm) a file
+int ramfs_remove_file(ramfs_node_t *parent, const char *name){
+	//validate inputs
+	if(parent ==0 || parent->type != RAMFS_DIRECTORY || name ==0 || name[0] == '\0'){
+		return 1;
+	} 
+	ramfs_node_t *current =parent->children;
+	ramfs_node_t *previous =0;
+	
+	//search for the target node
+	while(current !=0){
+		uint32_t i =0;
+		while(current->name[i] ==name[i] && name[i] != '\0'){
+			i++;
+		}
+		if(current->name[i]=='\0' && name[i] == '\0'){
+			break;
+		}
+		previous = current;
+		current = current->next_sibling;
+		
+	}
+	// file not found
+	if(current==0){
+		return -1;
+	}
+	//only allow file to be removed
+	if(current->type != RAMFS_FILE){
+		return -1;
+	}
+	//unlink the node from the dir's linked list
+	if(previous ==  0){
+		parent->children = current->next_sibling;
+		
+	}else{
+		previous->next_sibling = current->next_sibling;
+	}
+	//return the node to the to the free node list
+	current->name[0] = '\0';
+	current->parent = 0;
+	current->children=0;
+	current->size=00;
+	
+	current->next_sibling = free_nodes;
+	free_nodes = current;
+	return 0;
 }
 
 int ramfs_write_file(ramfs_node_t *file, const char *data){
