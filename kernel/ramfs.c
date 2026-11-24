@@ -224,13 +224,65 @@ int ramfs_remove_file(ramfs_node_t *parent, const char *name){
 	current->name[0] = '\0';
 	current->parent = 0;
 	current->children=0;
-	current->size=00;
+	current->size=0;
 	
 	current->next_sibling = free_nodes;
 	free_nodes = current;
 	return 0;
 }
 
+
+//move a file
+int ramfs_move_file(ramfs_node_t *source_parent, const char *source_name, ramfs_node_t *destination_parent, const char *new_name ){
+	//validate directories and names
+	if(source_parent==0 || destination_parent ==0 || source_parent->type != RAMFS_DIRECTORY || destination_parent->type != RAMFS_DIRECTORY || source_name ==0 || new_name ==0 || source_name[0]=='\0' || new_name[0]=='\0'){
+		return -1;
+	}
+	//validate the new file name length
+	uint32_t length=0;
+	while(new_name[length] !='\0'){
+		if(length>=RAMFS_NAME_MAX-1){
+			return -1;
+		}
+		length++;
+	
+	}
+
+	//find the source file
+	ramfs_node_t *file=ramfs_find(source_parent,source_name);
+	if(file==0 || file->type !=RAMFS_FILE){
+		return -1;
+	}
+	//prevcent overwtrtting an existing destination
+	ramfs_node_t *existing = ramfs_find(destination_parent, new_name);
+	if(existing !=0 && existing != file){return -1;}
+	//find the source file in its parent's linnked list
+	ramfs_node_t *current = source_parent->children;
+	ramfs_node_t *previous =0;
+	while(current != file){
+		previous =  current;
+		current = current->next_sibling;
+
+	}
+	//unlink the file fro its current dir
+	if(previous==0){
+		source_parent->children = file->next_sibling;
+	}else{
+		previous->next_sibling=file->next_sibling;
+		
+	}
+	//update the file name
+	for(uint32_t i =0; i<=length;i++){
+		file->name[i]=new_name[i];
+		
+	}
+	//update the parent dir
+	file->parent=destination_parent;
+	//attach the file to the destination dir
+	file->next_sibling=destination_parent->children;
+	destination_parent->children=file;
+	return 0;
+}
 
 //remove dir
 int ramfs_remove_directory(ramfs_node_t *parent, const char *name){

@@ -835,6 +835,53 @@ if(result ==-1){
 print("ramfs dir deletion test finished!\n");
 
 
+//testing ramfs file movement
+print("testing ramfs file movnt\n");
+//create  a source file
+ramfs_node_t *move_file = ramfs_create_file(documents, "move.txt");
+if(move_file !=0){
+	ramfs_write_file(move_file, "Hello from mood amber!\n");
+	print("Success: source file created\n");
+}
+// create destination directory
+ramfs_node_t *archive = ramfs_create_directory(documents, "archive");
+if(archive !=0){
+	print("succes: destination directory created!\n");
+}
+//move the files
+int move_result = ramfs_move_file(documents, "move.txt", archive, "move.txt");
+if(move_result ==0){
+	print("Success: file moved\n");
+}else{
+	print("failed: file movnt failed\n");
+}
+//verify source no longer contains the file
+if(ramfs_find(documents,"move.txt")==0){
+	print("Success: source entry removed\n");
+}
+//verify  destination has the same node
+ramfs_node_t *moved_file=ramfs_find(archive, "move.txt");
+if(moved_file==move_file){
+	print("success: same file node preserved!\n");
+}
+//verify file contents survived
+char move_buffer[RAMFS_DATA_MAX];
+int move_bytes=ramfs_read_file(moved_file, move_buffer,  sizeof(move_buffer));
+if(move_bytes>0){
+	print("success: file contents preserved\n");
+	print(move_buffer);
+	print("\n");
+	
+}
+//test remaining
+move_result = ramfs_move_file(archive, "move.txt", archive, "renamed.txt");
+if(move_result==0){
+	print("success: file renamed\n");
+}
+if(ramfs_find(archive, "move.txt")==0 && ramfs_find(archive, "renamed.txt")==move_file){
+	print("succes: rename verified\n");
+}
+print("ramfs file movnt tests finished!\n");
 	shell_init();
 	#define COMMAND_BUFFER_SIZE 128
 	char command_buffer[COMMAND_BUFFER_SIZE]={0};

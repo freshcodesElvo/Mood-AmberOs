@@ -368,7 +368,65 @@ static void remove_file(const char *args){
 		print("failed to delete file : the file may not exist or might be a directorv.\n");
 	}
 }
-
+//move
+static void move_file(const char *args){
+	//skip leading spaces
+	while(*args == ' '){
+		args++;
+	}
+	//extract source file name
+	char source_name[RAMFS_NAME_MAX];
+	uint32_t i =0;
+	
+	while(*args !='\0' &&  *args !=' ' && i<RAMFS_NAME_MAX-1){
+		source_name[i]= *args;
+		i++;
+		args++;
+	} 
+	source_name[i]='\0';
+	if(i==0 || *args !=' ' ){
+		print("usage: mv <source> <destination>\n");
+		return;
+	}
+	//skip spaces
+	while(*args == ' '){
+		args++;
+	}
+	//extract destination
+	char destination[RAMFS_NAME_MAX];
+	uint32_t j =0;
+	while(*args !='\0' && *args != ' ' && j<RAMFS_NAME_MAX-1){
+		destination[j]=*args;
+		j++;
+		args++;
+	}
+	destination[j]='\0';
+	if(j==0){
+		print("usage: <source><destination>\n");
+		return;
+	}
+	//reject execively long names
+	if(*args !='\0'){
+		print("Destination name is too lng or unexpected arguments\n");
+		return;
+	}
+	//check whether destination is dir
+	ramfs_node_t *destination_dir=ramfs_find(current_directory, destination);
+	const char *new_name = destination;
+	if(destination_dir != 0 && destination_dir->type==RAMFS_DIRECTORY){
+		destination_dir=destination_dir;
+		new_name = source_name;
+	}else{
+		destination_dir=current_directory;
+	}
+	int result = ramfs_move_file(current_directory, source_name, destination_dir, new_name);
+	if(result == 0){
+		print("file move successfully!\n");
+		
+	}else{
+		print("failed to move file\n");
+	}
+}	
 
 
 //remove dir
@@ -446,6 +504,7 @@ void shell_execute(const char *command)
 	print("append - Append content into a file\n");
 	print("rm - delete a file");
 	print("rmdir - remove an empty directory\n");
+	print("mv - move or rename a file\n");
 
     }
     else if (string_compare(command_name, "about") == 0)
@@ -534,6 +593,9 @@ void shell_execute(const char *command)
     }
     else if(string_compare(command_name, "rmdir")==0){
     	remove_directory(args);
+    }
+    else if (string_compare(command_name, "mv") == 0){
+        move_file(args);
     }
     else if (*command_name == '\0')
     {
